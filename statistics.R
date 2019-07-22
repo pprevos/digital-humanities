@@ -14,13 +14,16 @@ ggsave("../../Genealogy/years.png")
 
 alive <- function(population, census_date){
     max_date <- census_date + 100 * 365.25
-    filter(people, (is.na(Birth_Date) & Death_Date <= max_date) |
+    filter(people, (is.na(Birth_Date) & (Death_Date <= max_date &
+                                         Death_Date >= census_date)) |
                    (Birth_Date <= census_date & Death_Date >= census_date)) %>%
         arrange(Birth_Date) %>%
         mutate(Age = as.numeric(census_date - Birth_Date) / 365.25) %>%
         return()
 }
 
-alive(presidents, as.Date("1840-03-07"))
+alive(presidents, as.Date("1840-03-07")) %>%
+    filter(is.na(Birth_Date)) %>%
+    arrange(Death_Date)
     
     
