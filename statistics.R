@@ -2,7 +2,7 @@
 library(tidyverse)
 library(lubridate)
 source("read.gedcom.R")
-presidents <- read.gedcom("https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/pres.ged")
+presidents <- read_gedcom_ind("https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/pres.ged")
 
 filter(presidents, grepl("Jefferson", Full_Name))
 
@@ -18,8 +18,7 @@ alive <- function(population, census_date){
                                          Death_Date >= census_date)) |
                    (Birth_Date <= census_date & Death_Date >= census_date)) %>%
         arrange(Birth_Date) %>%
-        mutate(Age = as.numeric(census_date - Birth_Date) / 365.25) %>%
-        return()
+        mutate(Age = as.numeric(census_date - Birth_Date) / 365.25)
 }
 
 alive(presidents, as.Date("1840-03-07")) %>%

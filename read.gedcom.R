@@ -1,15 +1,15 @@
-## Read GEDCOM file
+## Read GEDCOM file for individuals
 
 ## The Devil is in the Data
 ## lucidmanager.org/data-science
 ## Dr Peter Prevos
 
-read.gedcom <- function(gedcom.loc) {
-    require(stringr)
-    require(tibble)
-    require(dplyr)
+read_gedcom_ind <- function(gedcom_loc) {
+    library(stringr)
+    library(tibble)
+    library(dplyr)
 
-    gedcom <- str_squish(readLines(gedcom.loc))
+    gedcom <- str_squish(readLines(gedcom_loc))
     idv <- sum(grepl("^0.*INDI$", gedcom))
     fam <- sum(grepl("^0.*FAM$", gedcom))
     cat(paste("Individuals: ", idv, "\n"))
@@ -80,7 +80,6 @@ read.gedcom <- function(gedcom.loc) {
     family %>%
         mutate(Full_Name = gsub("/", "", str_trim(Full_Name)),
                Birth_Date = as.Date(family$Birth_Date, format = "%d %b %Y"),
-               Death_Date = as.Date(family$Death_Date, format = "%d %b %Y")) %>%
-        return()
+               Death_Date = as.Date(family$Death_Date, format = "%d %b %Y"))
 }
 
