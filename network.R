@@ -4,7 +4,7 @@ library(igraph)
 source("read.gedcom.R")
 
 ## Read data
-sample <- read.gedcom("http://heiner-eichmann.de/gedcom/allged.ged")
+sample <- read_gedcom_ind("http://heiner-eichmann.de/gedcom/allged.ged")
 
 ## Convert to network
 tree <- filter(sample, !is.na(Father_id), !is.na(Mother_id)) %>%

@@ -1,6 +1,6 @@
 ## Analyse population
 source("gedcom.R")
-pop <- read.gedcom("http://heiner-eichmann.de/gedcom/allged.ged")
+pop <- read_gedcom_ind("http://heiner-eichmann.de/gedcom/allged.ged")
 pop <- mutate(pop, Age = as.numeric(Death_Date - Birth_Date) / 365.25)
 
 library(plotrix)
@@ -15,13 +15,14 @@ plot.age.pyramid <- function(population) {
         group_by(Gender, Cohort) %>%
         count() %>%
         mutate(n = ifelse(Gender == "F", -n, n)) %>%
-    ggplot(aes(Cohort, n, fill = Gender)) +
-    geom_col() +
-    coord_flip() +
-    scale_y_continuous(breaks = seq(-20, 40, 10), 
-                     labels = paste0(as.character(c(seq(20, 0, -10), seq(10, 40, 10))))) + 
-    scale_fill_brewer(palette = "Paired") + theme_bw() + 
-    labs(x = "Age group", y = "Number")
+        ggplot(aes(Cohort, n, fill = Gender)) +
+        geom_col() +
+        coord_flip() +
+        scale_y_continuous(breaks = seq(-20, 40, 10), 
+                           labels = paste0(as.character(c(seq(20, 0, -10), seq(10, 40, 10))))) + 
+        scale_fill_brewer(palette = "Paired") + 
+        theme_bw() + 
+        labs(x = "Age group", y = "Number")
 }
 
 plot.age.pyramid(pop)
