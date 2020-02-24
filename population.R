@@ -1,9 +1,13 @@
 ## Analyse population
-source("gedcom.R")
-pop <- read_gedcom_ind("http://heiner-eichmann.de/gedcom/allged.ged")
-pop <- mutate(pop, Age = as.numeric(Death_Date - Birth_Date) / 365.25)
-
+library(dplyr)
+library(ggplot2)
 library(plotrix)
+
+source("read.gedcom.R")
+pop <- read_gedcom_ind("heugem.ged")
+pop <- mutate(pop, Age = as.numeric(Death_Date - Birth_Date) / 365.25)
+pop
+
 
 plot.age.pyramid <- function(population) {
     population %>%
