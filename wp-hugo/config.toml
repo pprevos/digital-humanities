@@ -1,0 +1,9 @@
+baseURL = "http://lucidmanager.net/"
+languageCode = "en-gb"
+title = "The Lucid Manager"
+theme = "indigo"
+
+[markup]
+  [markup.highlight]
+    style = "colorful"
+

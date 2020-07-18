@@ -1,0 +1,18 @@
+[submodule "themes/hugo-theme-codex"]
+	path = themes/hugo-theme-codex
+	url = https://github.com/jakewies/hugo-theme-codex.git
+[submodule "themes/third-hemisphere"]
+	path = themes/third-hemisphere
+	url = https://github.com/pprevos/hugo-thirdhemisphere
+[submodule "wp-hugo/themes/indogo"]
+	path = wp-hugo/themes/indogo
+	url = https://github.com/AngeloStavrow/indigo.git
+[submodule "wp-hugo/themes/cupper-hugo-theme"]
+	path = wp-hugo/themes/cupper-hugo-theme
+	url = https://github.com/zwbetz-gh/cupper-hugo-theme.git
+[submodule "wp-hugo/themes/hugo-theme-basic"]
+	path = wp-hugo/themes/hugo-theme-basic
+	url = https://github.com/siegerts/hugo-theme-basic.git
+[submodule "wp-hugo/themes/indigo"]
+	path = wp-hugo/themes/indigo
+	url = https://github.com/AngeloStavrow/indigo.git
