@@ -1,0 +1,240 @@
+#+title: Analysing Digital Water Meter Data using the Tidyverse
+#+date: 2018-02-07 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics R-Language
+#+draft: true
+
+In [[https://lucidmanager.org/simulating-water-consumption/][last week's
+article]], I discussed how to simulate water consumption data to help
+develop analytics and reporting. This post describes how to create a
+diurnal curve from standard digital metering data. The code for this
+article is available on
+[[https://github.com/pprevos/hydroinformatics/tree/master/WaterFlow/PhuTho][GitHub]].
+
+** Data Source
+   :PROPERTIES:
+   :CUSTOM_ID: data-source
+   :END:
+
+The simulated data consists  of three fields:
+
+- /DevEUI/: Unique identifier of the digital water meter.
+- /Timestamp/ in
+  [[https://en.wikipedia.org/wiki/Coordinated_Universal_Time][Coordinated
+  Universal Time]]
+- Cumulative /count/ of pulses.
+
+All analysis is undertaken in the local Australian Eastern Standard Time
+(AEST). The input to all functions is thus in AEST. The digital water
+meters send an hourly pulse at a random time within the hour. Each
+transmitter (RTU) uses a random offset to avoid network congestion. The
+digital meter counts each time the impeller makes a full turn, and for
+this analysis, we assume that this equates to a five-litre volume. The
+ratio between volume and count depends on the meter brand and type. The
+image below shows a typical data set for an RTU, including some missing
+data points.
+
+#+CAPTION: Simulated water consumption (red: measured points, blue:
+interpolated points.
+[[/images/blogs.dir/4/files/sites/4/2018/01/consumption.png]]
+
+To analyse the data we need two auxiliary functions: one to slice the
+data we need and one to interpolate data for the times we need it. The
+[[https://www.tidyverse.org/][Tidyverse]] heavily influences the code in
+this article. I like the Tidyverse way of doing things because it leads
+to elegant code that is easy to understand.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(lubridate)
+  library(magrittr)
+  meter_reads <- read.csv("meter_reads.csv")
+  rtu <- unique(meter_reads$DevEUI)
+  meter_reads$TimeStampUTC <- as.POSIXct(meter_reads$TimeStampUTC, tz = "UTC")
+#+END_EXAMPLE
+
+** Slicing Digital Water Metering Data
+   :PROPERTIES:
+   :CUSTOM_ID: slicing-digital-water-metering-data
+   :END:
+
+Data analysis is undertaken on slices of the complete data set. This
+function slices the available data by a vector of RTU ids and a
+timestamp range in AEST. This function adds a new timestamp variable in
+AEST. If no date range is provided, all available data for the selected
+RTUs is provided. The output of this function is a data frame (a Tibble
+in Tydiverse language).
+
+#+BEGIN_EXAMPLE
+  slice_reads <- function(rtus, dates = range(meter_reads$TimeStampUTC)) {
+      filter(meter_reads, DevEUI %in% rtus) %>%
+      mutate(TimeStampAEST = as.POSIXct(format(TimeStampUTC, tz = "Australia/Melbourne"))) %>%
+      filter(TimeStampAEST >= as.POSIXct(dates[1]) &
+             TimeStampAEST <= as.POSIXct(dates[2])) %>%
+      arrange(DevEUI, TimeStampAEST)
+  }
+#+END_EXAMPLE
+
+** Interpolation of Meter Reads
+   :PROPERTIES:
+   :CUSTOM_ID: interpolation-of-meter-reads
+   :END:
+
+This function interpolates the cumulative counts for a series of RTUs
+over a vector of timestamps in AEST. The function creates a list to
+store the results for each RTU, interpolates the data using the
+[[https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html][approx
+function]] and then flattens the list back to a data frame. The
+interpolation function contains a different type of pipe because of the
+approx for interpolation function does not take a data argument. The
+=%$%= pipe from the Magrittr
+[[https://cran.r-project.org/web/packages/magrittr/README.html][package]]
+solves that problem.
+
+The output is a data frame with DevEUI, the timestamp in AEST and the
+interpolated cumulative count. The image above shows the counts for two
+meters over two days an the graph superimposes an interpolated point
+over the raw data. Although the actual data consists of integer counts,
+interpolated values are numeric values. The decimals are retained to
+distinguish them from real reads.
+
+#+BEGIN_EXAMPLE
+  interpolate_count <- function(rtus, timestamps) {
+      timestamps <- as.POSIXct(timestamps, tz = "Australia/Melbourne")
+      results <- vector("list", length(rtus))
+      for (r in seq_along(rtus)) {
+          interp <- slice_reads(rtus[r]) %$%
+          approx(TimeStampAEST, Count, timestamps)
+          results[[r]] <- data_frame(DevEUI = rep(rtus[r], length(timestamps)),
+                                     TimeStampAEST = timestamps, Count = interp$y)
+      }
+      return(do.call(rbind, results))
+  }
+
+  interpolate_count(rtu[2:3], seq.POSIXt(as.POSIXct("2020-02-01"), as.POSIXct("2020-02-2"), by = "day"))
+
+  slice_reads(rtu[2], c("2020-02-06", "2020-02-08")) %>%
+      ggplot(aes(x = TimeStampAEST, y = Count)) +
+          geom_line(col = "grey", size = 1) +
+          geom_point(col = "red") +
+          geom_point(data = interpolate_count(rtu[2],
+                     as.POSIXct("2020-02-06") + (0:2) * 24 * 3600), colour = "blue") +
+          ggtitle(paste("DevEUI", rtu[2]))
+#+END_EXAMPLE
+
+With these two auxiliary functions, we can start analysing the data.
+
+** Daily Consumption
+   :PROPERTIES:
+   :CUSTOM_ID: daily-consumption
+   :END:
+
+Daily consumption for each connection is a critical metric in managing
+water resources and billing customers. The daily consumption of any
+water connection is defined by the difference between the cumulative
+counts at midnight. The interpolation function makes it easy to
+determine daily consumption. This function interpolates the midnight
+reads for each of the RTUs over the period, starting the previous day.
+The output of the function is a data frame that can be piped into the
+plotting function to visualise the data. When you group the data by
+date, you can also determine the total consumption over a group of
+services.
+
+#+BEGIN_EXAMPLE
+  daily_consumption <- function(rtus, dates) {
+      timestamps <- seq.POSIXt(as.POSIXct(min(dates)) - 24 * 3600, as.POSIXct(max(dates)), by = "day")
+      interpolate_count(rtus, timestamps) %>%
+          group_by(DevEUI) %>%
+          mutate(Consumption = c(0, diff(Count)) * 5,
+                 Date = format(TimeStampAEST, "%F")) %>%
+          filter(TimeStampAEST != timestamps[1]) %>%
+          select(DevEUI, Date, Consumption)
+  }
+
+  daily_consumption(rtu[32:33], c("2020-02-01", "2020-02-7")) %>%
+      ggplot(aes(x = Date, y = Consumption)) + geom_col() +
+          facet_wrap(~DevEUI) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#+END_EXAMPLE
+
+#+CAPTION: Analysing digital water meter data: Daily consumption.
+[[/images/blogs.dir/4/files/sites/4/2018/02/daily-1.png]]
+
+** Diurnal Curves
+   :PROPERTIES:
+   :CUSTOM_ID: diurnal-curves
+   :END:
+
+The diurnal curve is one of the most important pieces of information
+used in the design of water supply systems. This curve shows the usage
+of one or more services for each hour in the day. This curve is a
+reflection of human behaviour, as we use most water in the morning and
+the evenings.
+
+This function slices data for a vector of RTUs over a period and then
+plots the average diurnal curve. The data is obtained by interpolating
+the cumulative counts for each whole hour in the period. The function
+then calculates the flow in litres per hour and visualises the minimum,
+mean and maximum value.
+
+#+BEGIN_EXAMPLE
+  plot_diurnal_connections <- function(rtus, dates) {
+      timestamps <- seq.POSIXt(as.POSIXct(dates[1]), as.POSIXct(dates[2]), by = "hour")
+      interpolate_count(rtus, timestamps) %>%
+          mutate(Rate = c(0, diff(Count * 5)),
+                 Hour = as.integer(format(TimeStampAEST, "%H"))) %>%
+          filter(Rate >= 0) %>%
+          group_by(Hour) %>%
+          summarise(min = min(Rate), mean = mean(Rate), max = max(Rate)) %>%
+          ggplot(aes(x = Hour, ymin = min, ymax = max)) +
+              geom_ribbon(fill = "lightblue", alpha = 0.5) +
+              geom_line(aes(x = Hour, y = mean), col = "orange", size = 1) +
+              ggtitle("Connections Diurnal flow") +
+              ylab("Flow rate [L/h]")
+  }
+
+  plot_diurnal_connections(rtu[12:20], c("2020-02-01", "2020-03-01"))
+#+END_EXAMPLE
+
+Boxplots are also an informative way to visualise this curve. This
+method provides more statistical information on one page, and the ggplot
+function performs the statistical analysis.
+
+#+CAPTION: Analysing digital water meter data: Diurnal curve.
+[[/images/blogs.dir/4/files/sites/4/2018/02/diurnal_line-1024x659.png]]
+
+#+BEGIN_EXAMPLE
+  plot_diurnal_box <- function(rtus, dates) {
+      timestamps <- seq.POSIXt(as.POSIXct(dates[1]), as.POSIXct(dates[2]), by = "hour")
+      interpolate_count(rtus, timestamps) %>%
+          mutate(Rate = c(0, diff(Count * 5)),
+                 Hour = as.integer(format(TimeStampAEST, "%H"))) %>%
+          filter(Rate >= 0) %>%
+          group_by(Hour) %>%
+          ggplot(aes(x = factor(Hour), y = Rate)) +
+              geom_boxplot() +
+              ggtitle("Diurnal flow") +
+              ylab("Flow rate [L/h]") +
+              xlab("Time")
+  }
+  plot_diurnal_box(rtu[12:20], c("2020-02-01", "2020-03-01"))
+#+END_EXAMPLE
+
+#+CAPTION: Analysing digital water meter data: Diurnal curve.
+[[/images/blogs.dir/4/files/sites/4/2018/02/diurnal_box-1024x659.png]]
+
+** Further Analysing Digital Water Metering Data
+   :PROPERTIES:
+   :CUSTOM_ID: further-analysing-digital-water-metering-data
+   :END:
+
+These are only glimpses into what is possible with this type of
+data. Further algorithms need to be developed to extract additional
+value from this data. I am working on developing leak detection
+algorithms and clustering diurnal curves, daily consumption graphs and
+so on. Any data science enthusiast who is interested in helping me to
+develop an Open Source R library to analyse digital metering data.
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

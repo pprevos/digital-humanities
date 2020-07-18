@@ -1,0 +1,173 @@
+#+title: Euler Problem 18 and 67: Maximum Path Sums
+#+date: 2017-04-27 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 18 and 67 are exactly the same besides that the data set
+in the second version is larger than in the first one. In this post, I
+kill two Eulers with one code. These two problems are logically similar
+to [[https://lucidmanager.org/euler-problem-15-lattice-paths/][Euler
+problem 15]].
+
+These two problems concern
+[[https://en.wikipedia.org/wiki/Binary_tree][binary trees]], which is a
+data structure where each node has two children. A practical example of
+a binary tree is a
+[[https://en.wikipedia.org/wiki/Pedigree_chart][pedigree chart]], where
+each person or animal has two parents, four grandparents and so on. In
+this Project Euler problem we need to navigate through the tree.
+
+** Euler Problem 18 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-18-definition
+   :END:
+
+By starting at the top of the triangle below and moving to adjacent
+numbers on the row below, the maximum total from top to bottom is 23.
+
+#+BEGIN_EXAMPLE
+  3
+  7 4
+  2 4 6
+  8 5 9 3
+#+END_EXAMPLE
+
+That is, 3 + 7 + 4 + 9 = 23. [[https://projecteuler.net/problem=18][Find
+the maximum total from top to bottom of the triangle below]]:
+
+#+BEGIN_EXAMPLE
+  75
+  95 64
+  17 47 82
+  18 35 87 10
+  20 04 82 47 65
+  19 01 23 75 03 34
+  88 02 77 73 07 63 67
+  99 65 04 28 06 16 70 92
+  41 41 26 56 83 40 80 70 33
+  41 48 72 33 47 32 37 16 94 29
+  53 71 44 65 25 43 91 52 97 51 14
+  70 11 33 28 77 73 17 78 39 68 17 57
+  91 71 52 38 17 14 91 43 58 50 27 29 48
+  63 66 04 68 89 53 67 30 73 16 69 87 40 31
+  04 62 98 27 23 09 70 98 73 93 38 53 60 04 23
+#+END_EXAMPLE
+
+As there are only 16,384 routes, it is possible to solve this problem by
+trying every route. However,
+[[https://projecteuler.net/problem=67][Problem 67]], is the same
+challenge with a triangle containing one-hundred rows; it cannot be
+solved by brute force, and requires a clever method! ;o)
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+This problem seeks a
+[[http://www.geeksforgeeks.org/find-maximum-path-sum-in-a-binary-tree/][maximum
+path sum in a binary tree.]] The brute force method, as indicated in the
+problem definition, is a very inefficient way to solve this problem. The
+video visualises the quest for the maximum path, which takes eleven
+minutes of hypnotic animation.
+
+{{< youtube "z-AOWBztnpI" >}}
+
+Maximum path sum.
+
+A more efficient method is to define the maximum path layer by layer,
+starting at the bottom. The maximum sum of 2+8 or 2+5 is 10, the maximum
+sum of 4+5 or 4+9 is 13 and the last maximum sum is 15. These numbers
+are now placed in the next row. This process cycles until only one
+number is left. This algorithm solves the sample triangle in four steps:
+
+Step 1:
+
+#+BEGIN_EXAMPLE
+  3
+  7 4
+  2 4 6
+  8 5 9 3
+#+END_EXAMPLE
+
+Step 2:
+
+#+BEGIN_EXAMPLE
+  3
+  7 4
+  10 13 15
+#+END_EXAMPLE
+
+Step 3:
+
+#+BEGIN_EXAMPLE
+  3
+  20 19
+#+END_EXAMPLE
+
+Step 4:
+
+#+BEGIN_EXAMPLE
+  23
+#+END_EXAMPLE
+
+In the code below, the data is triangle matrix. The variables /rij/
+(row) and /kol/ (column) drive the search for the maximum path. The
+triangle for Euler Problem 18 is manually created and the triangle for
+Euler Problem 67 is read from the website.
+
+#+BEGIN_EXAMPLE
+  path.sum <- function(triangle) {
+      for (rij in nrow(triangle):2) {
+          for (kol in 1:(ncol(triangle)-1)) {
+              triangle[rij - 1,kol] <- max(triangle[rij,kol:(kol + 1)]) + triangle[rij - 1, kol]
+          }
+          triangle[rij,] <- NA
+      }
+  return(max(triangle, na.rm = TRUE))
+  }
+
+  triangle <- matrix(ncol = 15, nrow = 15)
+  triangle[1,1] <- 75
+  triangle[2,1:2] <- c(95, 64)
+  triangle[3,1:3] <- c(17, 47, 82)
+  triangle[4,1:4] <- c(18, 35, 87, 10)
+  triangle[5,1:5] <- c(20, 04, 82, 47, 65)
+  triangle[6,1:6] <- c(19, 01, 23, 75, 03, 34)
+  triangle[7,1:7] <- c(88, 02, 77, 73, 07, 63, 67)
+  triangle[8,1:8] <- c(99, 65, 04, 28, 06, 16, 70, 92)
+  triangle[9,1:9] <- c(41, 41, 26, 56, 83, 40, 80, 70, 33)
+  triangle[10,1:10] <- c(41, 48, 72, 33, 47, 32, 37, 16, 94, 29)
+  triangle[11,1:11] <- c(53, 71, 44, 65, 25, 43, 91, 52, 97, 51, 14)
+  triangle[12,1:12] <- c(70, 11, 33, 28, 77, 73, 17, 78, 39, 68, 17, 57)
+  triangle[13,1:13] <- c(91, 71, 52, 38, 17, 14, 91, 43, 58, 50, 27, 29, 48)
+  triangle[14,1:14] <- c(63, 66, 04, 68, 89, 53, 67, 30, 73, 16, 69, 87, 40, 31)
+  triangle[15,1:15] <- c(04, 62, 98, 27, 23, 09, 70, 98, 73, 93, 38, 53, 60, 04, 23)
+
+  answer <- path.sum(triangle)
+  print(answer)
+#+END_EXAMPLE
+
+** Euler Problem 67
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-67
+   :END:
+
+The solution for problem number 67 is exactly the same. The data is read
+directly from the Project Euler website.
+
+#+BEGIN_EXAMPLE
+  triangle.file <- read.delim("https://projecteuler.net/project/resources/p067_triangle.txt",
+                              stringsAsFactors = FALSE, header = FALSE)
+  triangle.67 <- matrix(nrow = 100, ncol = 100)
+  for (i in 1:100) {
+      triangle.67[i,1:i] <- as.numeric(unlist(strsplit(triangle.file[i,], " ")))
+  }
+  answer <- path.sum(triangle.67)
+  print(answer)
+#+END_EXAMPLE
+
+You can download the latest version of this code from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem018.R][GitHub]].

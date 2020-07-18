@@ -1,0 +1,41 @@
+#+title: Euler Problem 5: Smallest Multiple | Solution in R
+#+date: 2016-12-29 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 5 relates to the
+[[https://lucidmanager.org/euler-problem-1/][divisibility of numbers]]
+and is an almost trivial problem that is included here only for
+completeness.
+
+** Euler Problem 5
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-5
+   :END:
+
+2520 is the smallest number that can be divided by each of the numbers
+from 1 to 10 without any remainder. What is the
+[[https://projecteuler.net/problem=5][smallest positive number that is
+evenly divisible by all of the numbers from 1 to 20]]?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The solution will also be divisible by the numbers 1 to 10 so we can
+start at 2520 and increment by 2520. The loop checks whether the number
+is divisible by the numbers 1 to 20. You can view the code below or
+download the latest version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem005.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  i <- 2520
+  while (sum(i %% (1:20)) != 0) {
+      i <- i + 2520 # Increase by smallest number divisible by 1:10
+  }
+  answer <- i
+  print(answer)
+#+END_EXAMPLE

@@ -1,0 +1,123 @@
+#+title: Create Air Travel Route Maps in ggplot: A Visual Travel Diary
+#+date: 2017-03-06 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: geocode Map-Porn R-Language
+#+draft: true
+
+I have been lucky to fly to a few countries around the world. Like any
+other bored traveller, I thumb through the airline magazines and look at
+the [[http://www.airlineroutemaps.com/][air travel route maps]]. These
+maps are beautifully stylised depictions of the world with gently curved
+lines between the many destinations serviced by the airline. I always
+wanted such a map for my own travel adventures. In this article I
+explain how to create a map of your own travels in the style of the
+Emirates Airlines route map.
+
+** Create Air Travel Route Maps using ggplot2
+   :PROPERTIES:
+   :CUSTOM_ID: create-air-travel-route-maps-using-ggplot2
+   :END:
+
+The first step was to create a list of all the places I have flown
+between at least once. Paging through my travel photos and diaries, I
+managed to create a pretty complete list. The structure of this document
+is simply a list of all
+[[https://github.com/pprevos/geography/blob/master/flights.csv][routes]]
+(From, To) and every flight only gets counted once. The next step finds
+the spatial coordinates for each airport by searching Google Maps using
+the geocode function from the
+[[https://cran.r-project.org/web/packages/ggmap/index.html][ggmap]]
+package. You will need a Google API to enable the
+[[https://lucidmanager.org/geocoding-with-ggmap/][geocoding function]].
+
+In some instances, I had to add the country name to avoid confusion
+between places. To prevent errors from the Google maps API, I have added
+a while loop that runs until all destinations have been geocoded.
+
+We now we have a data frame of airports with their coordinates and can
+create air travel route maps. The data frames are merged so that we can
+create air travel route maps using the
+[[http://ggplot2.tidyverse.org/reference/geom_segment.html][curve
+geom]]. The
+[[http://ggplot2.tidyverse.org/reference/borders.html][borders]]
+function of ggplot2 creates the map data. The
+[[https://github.com/slowkow/ggrepel][ggrepel]] package helps to prevent
+overplotting of text. This code also removes any return flights and
+splits flights that crossed the date line.
+
+#+CAPTION: My personal Air Travel Route Maps in ggplot: A Visual Travel
+Diary
+[[/images/blogs.dir/4/files/sites/4/2017/03/flights_map.png]]
+
+You can view the recent version of the code and associated files in
+[[https://github.com/pprevos/geography/][GitHub]]. In another post I
+have used the same principle to create a route map of flights between
+islands in the
+[[https://lucidmanager.org/pacific-island-hopping/][Pacific Ocean]]
+using the schedules from several international airlines.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(ggmap)
+  library(ggrepel)
+
+  flights <- read_csv(flights.csv)
+  airports_file <- "airports.csv"
+  if (file.exists(airports_file)) {
+    airports <- read_csv(airports_file)
+    } else {
+    airports <- data_frame(airport = NA, lon = NA, lat = NA)
+  }
+
+  destinations <- unique(c(flights$From, flights$To))
+  new_destinations <- destinations[!destinations %in% airports$airport]
+  while (length(new_destinations) > 0) {
+      new_airports <- geocode(new_destinations) %>%
+        mutate(airport = new_destinations) %>%
+        select(airport, lon, lat)
+      airports <- rbind(airports, new_airports) %>%
+        filter(!is.na(lon) | !is.na(lat))
+      new_destinations <- destinations[!destinations %in% airports$airport]
+  }
+  write_csv(airports, &quot;airports.csv&quot;)
+
+  d <- vector()
+  for (i in 1:nrow(flights)) {
+      d <- which(paste(flights$From, flights$To) %in% paste(flights$To[i], flights$From[i]))
+      flights$From[d] <- "R"
+  }
+  flights <- flights %>%
+    filter(From != "R") %>%
+    select(From, To)
+
+  flights <- merge(flights, airports, by.x = "From", by.y = "airport")
+  flights <- merge(flights, airports, by.x = "To", by.y = "airport")
+  flights <- flights %>% 
+    select(From, To, lon.x, lat.x, lon.y, lat.y) %>% 
+    as_data_frame()
+
+  circ <- which(abs(flights$lon.y - flights$lon.x) > 180)
+  flights[circ,]
+  flights$lon.y[circ] <- ifelse(flights$lon.y[circ] &lt; 0, 180, -180)
+  flights$lat.y[circ] <- rowSums(flights[circ, c("lat.x", "lat.y")]) / 2
+  leg2 <- airports %>%
+    filter(airport %in% flights$To[circ]) %>%
+    mutate(From = rep("", length(circ))) %>%
+    mutate(lon.x = -flights$lon.y[circ], lat.x = flights$lat.y[circ]) %>%
+    select(From, To = airport, lon.x, lat.x, lon.y = lon, lat.y = lat)
+  flights <- rbind(flights, leg2)
+
+  airports$airport <- as.character(airports$airport)
+  comma <- regexpr(",", airports$airport)
+  airports$airport[which(comma > 0)] <- substr(airports$airport[which(comma > 0)], 1, comma[comma > 0] - 1)
+
+  worldmap <- borders("world", colour = "#efede1", fill = "#efede1") 
+  ggplot() + worldmap + 
+      geom_point(data = airports, aes(x = lon, y = lat), col = "#970027") + 
+      geom_text_repel(data = airports, aes(x = lon, y = lat, label = airport), 
+                      col = "black", size = 2, segment.color = NA) + 
+      geom_curve(data = flights, aes(x = lon.x, y = lat.x, xend = lon.y, yend = lat.y), 
+                 col = "#b29e7d", size = .4) + 
+      theme_void()
+#+END_EXAMPLE

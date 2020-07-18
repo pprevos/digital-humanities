@@ -1,0 +1,322 @@
+#+title: Strategic Data Science: Creating Value With Data Big and Small
+#+date: 2019-02-24 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Data-Science-Strategy
+#+draft: true
+
+Data science is without a doubt the most popular business fad of the
+past decade. The wonderful promises of machine learning blind many
+managers, so they forget about deploying these new approaches
+strategically. To create value from data, managers need to use a
+strategic approach to data science. This article provides a framework
+for data science, following my book
+[[https://www.packtpub.com/big-data-and-business-intelligence/principles-strategic-data-science][Principles
+of Strategic Data Science]], published by Packt.
+
+#+CAPTION: Peter Prevos, Principles of Strategic Data Science.
+[[https://i0.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/08/sds_3d.png?fit=1024%2C852&ssl=1]]
+
+** What is Data Science?
+   :PROPERTIES:
+   :CUSTOM_ID: what-is-data-science
+   :END:
+
+The manager to understand the importance of data was
+[[https://lucidmanager.org/frederick-taylor-management-fundamentalism/][Frederick
+Taylor]]. He was a pioneer in using data to manage a business. He used
+data because he wanted to lower the influence of opinions and
+rules-of-thumb in favour of a scientific approach to management. The
+term data science emerged in the middle of the last century when
+electronic computation first became a topic of study. In those days, the
+discipline was literally a science of storing and manipulating data.
+
+The current definition has drifted away from this initial academic
+activity to a business activity. The current data science hype can be
+traced back to an article in the 2012 edition of
+[[https://hbr.org/2012/10/data-scientist-the-sexiest-job-of-the-21st-century][Harvard
+Business Review]]. Davenport and Patil proclaimed data scientist to be
+the sexiest job of the twenty-first century. Subsequently, in the wake
+of this article, the number of data science searches in Google increased
+rapidly.
+
+Organisations have for a long time used data to improve the lives of
+their customers, shareholders or society overall. Management gurus
+promoted concepts such as the data-driven organisation, evidence-based
+management, business intelligence and Six Sigma to help businesses
+realise the benefits of their data. Data science is an evolution of
+these methods enabled by the data revolution.
+
+*** The Data Revolution
+    :PROPERTIES:
+    :CUSTOM_ID: the-data-revolution
+    :END:
+
+Recent developments in information technology have significantly
+improved what we can do with data, resulting in what we now know as data
+science. Firstly, most business processes are managed electronically,
+which has exponentially increased the amount of available data.
+Developments in communication, such as the Internet of Things and
+personal mobile devices, have significantly reduced the price of
+collecting data.
+
+Secondly, the computing capabilities on the average office worker's desk
+outstrip the capabilities of the supercomputers of the past. Not only is
+it cheaper to collect vast amounts of electronic data, but processing
+these enormous volumes has also come within reach of the average office
+worker.
+
+Lastly, developments in applied mathematics and open source licensing
+have accelerated our capabilities in analysing this data. These new
+technologies allow us to discover patterns that were previously
+invisible. Data science is available to anyone wanting to learn because
+most tools to examine data are freely available on the internet with a
+helpful community sharing knowledge on how to use them.
+
+These three developments enabled an evolution from traditional business
+analysis to data science. Subsequently, data science has become the
+strategic and /systematic/ approach to analysing data to achieve
+organisational objectives using electronic computing. This definition is
+agnostic of the promises of machine learning and leverages the three
+developments mentioned above. Data science as such is the next evolution
+in business analysis that maximises the value we can extract from data.
+
+*** Data Science Strategy Competencies
+    :PROPERTIES:
+    :CUSTOM_ID: data-science-strategy-competencies
+    :END:
+
+The craft of data science combines three different competencies. To
+illustrate this idea, data scientist Drew Conway visualised these core
+competencies of data science in a
+[[http://drewconway.com/zia/2013/3/26/the-data-science-venn-diagram][Venn
+diagram]].
+
+#+CAPTION: Data science competencies (Based on Conway, 2009).
+[[/images/blogs.dir/9/files/sites/9/2019/05/figure03_Conway.png]]
+
+Firstly and most importantly, data science requires /domain knowledge/.
+Any analysis needs to be grounded in the reality it seeks to improve.
+Subject-matter expertise is a necessary condition to make sense of an
+investigation. Professional expertise in most areas uses /mathematics/
+to understand and improve outcomes. New mathematical tools expand the
+traditional approaches to develop a deeper understanding of the domain
+under consideration. Lastly, /computer science/ is the competency that
+binds the available data with mathematics. Writing computer code to
+extract, transform and analyse data to create information and stimulate
+knowledge is an essential skill for any data scientist.
+
+{{< youtube "https://youtu.be/cJO8ASwk_XU" >}}
+
+** Good Data Science
+   :PROPERTIES:
+   :CUSTOM_ID: good-data-science
+   :END:
+
+In order to create value with data, we need to know how to create or
+recognise good data science. The second chapter of the book uses three
+principles originally introduced two thousand years ago by the Roman
+architect and engineer Vitruvius. He wrote that buildings need to be
+/useful/, /sound/ and /aesthetic/. These requirements are also ideally
+suited to define best-practice in data science.
+
+#+CAPTION: The Vitruvian triangle for data science.
+[[/images/blogs.dir/9/files/sites/9/2019/02/vitrivius.png]]
+
+{{< youtube "https://youtu.be/Gge5aZ9jZqo" >}}
+
+*** Usefulness
+    :PROPERTIES:
+    :CUSTOM_ID: usefulness
+    :END:
+
+For data science to be useful, it needs to contribute to the objectives
+of an organisation positively. It is in this sense that data science is
+an applied science and not an academic pursuit. The famous
+Data-Information-Knowledge pyramid visualises the process of creating
+value from data.
+
+/Useful/ data science meaningfully improves our reality through data.
+Data is a representation of either a social or physical reality. Any
+data source is ever only a sample of the fullness and complexity of the
+real world. Information is data imbued with context. The raw data
+collected from reality needs to be summarised, visualised and analysed
+so that managers understand the reality of their business. This
+information increases knowledge about a business process, which is
+subsequently used to improve the reality from which the data was
+collected. This feedback loop visualises the essence of analysing data
+in businesses. Data science is a seductive activity because it is
+reasonably straightforward to create impressive visualisations with
+sophisticated algorithms. If data products don't improve or enlighten
+the current situation, they are in essence useless.
+
+#+CAPTION: Reality - Data - Information - Knowledge pyramid.
+[[/images/blogs.dir/9/files/sites/9/2019/02/feedback-loop-1024x551.png]]
+
+{{< youtube "https://youtu.be/_ITXY6Daa5s" >}}
+
+** Soundness
+   :PROPERTIES:
+   :CUSTOM_ID: soundness
+   :END:
+
+Data science needs to be /sound/ to ensure that the outcomes are valid
+and reliable. The validity and reliability of data are where the science
+meets the traditional approaches to analysing data. Validity is the
+extent to which the data represents the reality it describes. The
+reliability of data relates to the accuracy of the measurement. These
+two concepts depend on the type of data under consideration. Measuring
+physical processes is less complicated than the social aspects of
+society. Validity and reliability are in essence a sophisticated way of
+expressing the well-known Garbage-In-Garbage-Out principle.
+
+#+CAPTION: Reliability and validity of data and analysis.
+[[/images/blogs.dir/9/files/sites/9/2019/02/soundness-1024x436.png]]
+
+The soundness of data science also relates to the reproducibility of the
+analysis to ensure that other professionals can review the outcomes.
+Reproducibility prevents that the data and the process by which it was
+transformed and analysed become a black-box where we have no reason to
+trust the results. Data science also needs to be sound concerning the
+governance of the workflow. All data sources need to be curated by
+relevant subject matter experts to ensure their validity and
+reliability. Data experts provide that the data is available to those
+who need it.
+
+{{< youtube "https://youtu.be/_hAXvAvx92I" >}}
+
+*** Aesthetics
+    :PROPERTIES:
+    :CUSTOM_ID: aesthetics
+    :END:
+
+Lastly, data science needs to be /aesthetic/ to ensure that any
+visualisation or report is easy to understand by the consumer of the
+analysis. This requirement is not about beautification through
+infographics. Aesthetic data products minimise the risk or making wrong
+decisions because the information is presented without room for
+misinterpretation. Any visualisation needs to focus on telling a story
+with the data. This story can be a comparison, a prediction, a trend or
+whatever else is relevant to the problem.
+
+One of the essential principles of aesthetic data science is the
+data-to-pixel ratio. This principle means that we need to maximise the
+ratio between all the pixels on a screen and those pixels that present
+information. Good data visualisation practices austerity to ensure that
+the people that consume the information understand the story that needs
+to be told.
+
+#+CAPTION: Example of low and high data-to-pixel ratio.
+[[/images/blogs.dir/9/files/sites/9/2019/06/visualisation-1024x569.png]]
+
+{{< youtube "5grTD8cGZQM" >}}
+
+** Data Science Strategy
+   :PROPERTIES:
+   :CUSTOM_ID: data-science-strategy
+   :END:
+
+The data science continuum is a strategic journey for organisations that
+seek to maximise value from data. As an organisation moves along the
+continuum, increased complexity is the payoff for increased value. This
+continuum looks like hierarchy, but all phases are equally important.
+The last stages cannot exist without the previous ones. Therefore,
+implementing machine learning without a solid grasp of data collection
+will result in useless outcomes.
+
+#+CAPTION: Data science strategy continuum.
+[[/images/blogs.dir/9/files/sites/9/2019/02/data-science-continuum-1024x706.png]]
+
+Collecting data requires considerations on what to collect, how to
+collect it and at what frequency. To collect meaningful data requires a
+good understanding of the relationship between reality and data. There
+is no such thing as raw data as all information relies on assumptions
+and practical limitations.
+
+*** Type of Value from Data
+    :PROPERTIES:
+    :CUSTOM_ID: type-of-value-from-data
+    :END:
+
+- Describing the data is the first step in extracting value.
+- Descriptive statistics are the core of most business reporting and are
+  an essential first step in analysing the data.
+- Diagnostics or analysis is the core activity of most professions. Each
+  subject area uses specialised methods to create new information from
+  data.
+- Predictive analysis seems to be the holy grail for many managers. A
+  prediction is not a perfect description of the future but it provides
+  the distribution of possible futures. Managers can use this
+  information to change the present to construct their desired future.
+- Prescriptive analysis uses the knowledge created in the previous
+  phases to automatically run a business process and even decide on
+  future courses of action.
+
+Any organisation starting with data science should follow the five
+phases in this process and not jump ahead to try to bypass the seemingly
+less valuable stages.
+
+{{< youtube "7BR3_No2qm8" >}}
+
+** The Data-Driven Organisation
+   :PROPERTIES:
+   :CUSTOM_ID: the-data-driven-organisation
+   :END:
+
+Implementing a data science strategy is more than a matter of
+establishing a specialised team and solve complex problems. Creating a
+data-driven organisation that maximises the value of data requires a
+whole-of-business approach that involves people with the right attitude
+and skills, appropriate systems and robust processes.
+
+A data science team combines the three competencies described in the
+Conway Venn diagram. People that have skills in all three of these areas
+are rare, and the industry calls them unicorns. There is no need for
+recruiters to start hunting unicorns because these three areas of
+expertise can also exist within a team. Possibly more important than the
+technical skills are the social skills of a data scientist. Not only
+need they create useful, sound and aesthetic data science, they also
+need to convince the consumers of their work of its value.
+
+*** Data Literacy
+    :PROPERTIES:
+    :CUSTOM_ID: data-literacy
+    :END:
+
+One of the problems of creating value with data is ensuring that the
+results are implemented in the organisation. A starting point to achieve
+this is to ensure that the users of data products have a relevant level
+of data literacy. Developing data literacy among consumers of data
+science is probably one of the greatest challenges. The required level
+of data literacy depends on the type of position and the role of the
+data consumer within the organisation.
+
+Data scientists use an extensive range of tools and are often
+opportunistic in their choice of software.
+[[https://lucidmanager.org/spreadsheets-for-data-science/][Spreadsheets]]
+are not very suitable to create good data science. Data science requires
+coding skills and the Python and R languages are powerful tools to solve
+complex problems. After the data specialists have developed the best way
+to analyse data, they need to communicate these to their customers. Many
+specific products exist to communicate data to users with interactive
+dashboards and many other dynamic systems.
+
+The final part of this book on data science strategy delves into the
+ethics of data science. From the fact that something can be done, we
+certainly cannot conclude that it should be done. Just like any other
+profession that impacts humans, data scientists need ethical guidelines
+to ensure that their activities cause no harm. The book provides some
+basic guidelines that can assist data scientists to assess the ethical
+merits of their projects.
+
+** Summary
+   :PROPERTIES:
+   :CUSTOM_ID: summary
+   :END:
+
+In summary, data science is about more than using the latest algorithms
+to analyse data. Good data science has to be useful in that it
+positively influences the objectives of the organisation. Furthermore,
+good data science has to be sound through a methodical approach.
+
+[[/images/blogs.dir/9/files/sites/9/2019/06/golden-rule-data-science-ethics-1024x512.jpg]]

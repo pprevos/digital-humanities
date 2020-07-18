@@ -1,0 +1,94 @@
+#+title: Visualising Water Consumption using a Geographic Bubble Chart
+#+date: 2017-08-17 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics Map-Porn R-Language Vietnam
+#+draft: true
+
+A geographic bubble chart is a straightforward method to visualise
+quantitative information with a geospatial relationship. Last week I was
+in Vietnam helping the Phú Thọ Water Supply Joint Stock Company with
+their data science. They asked me to create a map of a sample of their
+water consumption data. In this post, I share this little ditty to
+explain how to plot a bubble chart over a map using the ggmap package.
+
+In this post, I share this little ditty to explain how to plot a bubble
+chart over a map using the ggmap package. You can find the code and data
+for this article on my
+[[https://github.com/pprevos/hydroinformatics/tree/master/WaterFlow/PhuTho][GitHub]]
+repository. With thanks to Ms Quy and Mr Tuyen of Phu Tho water for
+their permission to use this data. Other posts on this blog detail how
+to analyse water consumption from
+[[https://lucidmanager.org/digital-water-meter-data/][digital metering
+data]].
+
+This map visualises water consumption in the targeted area of Việt Trì.
+The larger the bubble, the larger the consumption. It is no surprise
+that two commercial customers used the most water.
+Ggplot automatically adds the legend for the consumption variable.
+
+[[/images/blogs.dir/4/files/sites/4/2017/08/VietTri_cropped.png]]
+
+** Load and Explore the Data
+   :PROPERTIES:
+   :CUSTOM_ID: load-and-explore-the-data
+   :END:
+
+The sample data contains a list of just over 100 readings from water
+meters in the city of Việt Trì in Vietnam, plus their geospatial
+location. This data uses the World Geodetic System of 1984 (WGS84),
+which is compatible with Google Maps and similar systems.
+
+#+BEGIN_EXAMPLE
+  water <- read.csv("PhuTho/MeterReads.csv")
+  water$Consumption <- water$read_new - water$read_old
+  ## Summarise the data
+  head(water)
+  summary(water$Consumption)
+#+END_EXAMPLE
+
+The consumption at each connection is between 0 and 529 cubic metres,
+with an average usage of 23.45 cubic metres.
+
+** Visualise the data with a geographic bubble chart
+   :PROPERTIES:
+   :CUSTOM_ID: visualise-the-data-with-a-geographic-bubble-chart
+   :END:
+
+With the
+[[https://journal.r-project.org/archive/2013-1/kahle-wickham.pdf][ggmap]]
+extension of the ggplot package, we can visualise any spatial data set
+on a map. The only condition is that the spatial coordinates are in the
+WGS84 datum. The ggmap package adds a geographical layer to ggplot by
+adding a Google Maps or Open Street Map canvas. The first step is to
+download the map canvas. To do this, you need to know the centre
+coordinates and the zoom factor. To determine the perfect zoon factor
+requires some trial and error. The ggmap package provides for various
+map types, which are described in detail in the
+[[https://cran.r-project.org/web/packages/ggmap/ggmap.pdf][documentation]].
+
+#+BEGIN_EXAMPLE
+  library(ggmap)
+  centre <- c(mean(range(water$lon)), mean(range(water$lat)))
+  viettri <- get_map(centre, zoom = 17, maptype = "hybrid")
+  g <- ggmap(viettri)
+#+END_EXAMPLE
+
+The ggmap package follows the same conventions as ggplot. We first call
+the map layer and then add any required geom. The point geom creates
+a nice bubble chart when used in combination with the
+=scale_size_area option=. This option scales the points to a maximum
+size so that they are easily visible. The transparency (alpha) minimises
+problems with overplotting. This last code snippet plots the map with
+water consumption.
+
+#+BEGIN_EXAMPLE
+  g + geom_point(data = reads, aes(x = lon, y = lat, size = Consumption),
+                 shape = 21, colour = "dodgerblue4", fill = "dodgerblue", 
+                 alpha = .5) +
+      scale_size_area(max_size = 20) + # Size of the biggest point
+      ggtitle("Việt Trì sự tiêu thụ nước")
+#+END_EXAMPLE
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

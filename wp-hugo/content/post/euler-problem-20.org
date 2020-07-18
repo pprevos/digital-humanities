@@ -1,0 +1,128 @@
+#+title: Euler Problem 20: Large Integer Factorials
+#+date: 2017-05-11 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 20 is the third problem that requires special
+consideration for working with very large integers. In this problem, we
+look at [[https://en.wikipedia.org/wiki/Factorial][factorials]]. These
+numbers are useful in combinatorics if, for example, you like to know in
+how many ways you can arrange a deck of cards.
+
+The problem with computing factorials is that they are mostly very large
+numbers, beyond the generic capabilities of computers to process. For
+example, a humble pack of playing card can be shuffled in $latex 52! =
+80658175170943878571660636856403766975289505440883277824000000000000$
+different configurations.
+
+** Euler Problem 20 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-20-definition
+   :END:
+
+$latex n ! = n \times (n - 1) \times (n-2) \times \ldots \times 3 \times
+2 \times 1.$
+
+For example: $latex  10 ! = 10 \times 9 \times \ldots \times 3 \times 2
+\times 1 = 3628800$.
+
+The sum of the digits in the number $latex 10 !$ is $latex 3 + 6 + 2 + 8
++ 8 + 0 + 0 = 27$.
+
+[[https://projecteuler.net/problem=20][Find the sum]] of the digits in
+the number 100!
+
+** Euler Problem 20 Solution
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-20-solution
+   :END:
+
+The factorial of the number 100 contains 158 digits, which is a lot more
+digits than a 64-bit operating system can accurately produce. Using the
+standard function: =factorial(100) = 9.332622e+157=. Without using a
+specialised algorithm, we cannot determine the sum of all digits. We
+need to
+deploy [[https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic][arbitrary-precision
+arithmetic]] to solve this problem.
+
+This problem can be solved using a specialised R package and using only
+base-R code. Many computer languages, including R, have special
+libraries to deal with such large numbers. The
+[[https://cran.r-project.org/web/packages/gmp/index.html][GMP Multiple
+Precision Arithmetic]] package renders this problem almost trivial.
+
+#+BEGIN_EXAMPLE
+  library(gmp)
+  digits <- factorialZ(100)
+  digits <- as.character(digits)
+  answer <- sum(as.numeric(unlist(strsplit(digits, ""))))
+#+END_EXAMPLE
+
+** Base-R Code
+   :PROPERTIES:
+   :CUSTOM_ID: base-r-code
+   :END:
+
+The problem becomes more interesting when only using basic R code. I
+developed the big.add function to
+solve [[https://lucidmanager.org/euler-problem-13/][Euler Problem
+13]] through the addition of very large integers. We can extend this
+function to also calculate factorials. A factorial can be replaced by a
+series of additions, for example:
+
+$latex 3! = 1 \times 2 \times 3 = (((1+1) + (1+1)) + (1+1))$
+
+This can be mimicked in R using
+the [[http://adv-r.had.co.nz/Functionals.html#functionals-fp][Reduce
+function]]. This function reduces a vector to a single value by
+recursively calling a function. =Reduce("+", rep(4, 5))= is the same as:
+
+$latex 4 \times 5 = ((((4 + 4) + 4) + 4) + 4) = 20$
+
+Using a loop, we can use the Reduce function to calculate a factorial,
+using only additions:
+
+#+BEGIN_EXAMPLE
+  fact <- 1
+  x <- 100
+  for (i in 2:x) {
+      fact <- Reduce("+", rep(fact, i))
+  }
+  print(fact)
+#+END_EXAMPLE
+
+The =big.factorial= function below implements this idea by combining the
+=big.add= and =Reduce= functions to calculate large integer factorials.
+The function returns a value of 1, for factorial of 0 or 1. This
+function does not calculate the
+[[https://en.wikipedia.org/wiki/Gamma_function][Gamma-function]] for
+fractions. For all other values, it goes through a loop from 2 to the
+requested factorial. The temporary values are stored in the /bf/
+variable. The code loops through the factorials by using the result of
+the previous /Reduce/ call into the current one.
+
+#+BEGIN_EXAMPLE
+  big.factorial <- function(x) {
+      x <- floor(x)
+      bf <- 1 if (x > 1) {
+          for (i in 2:x) {
+              bf <- Reduce(big.add, rep(bf,i))
+          }
+      }
+  return (bf)
+  }
+
+  digits <- big.factorial(100)
+  answer <- sum(as.numeric(unlist(strsplit(as.character(digits), ""))))
+  print(answer)
+#+END_EXAMPLE
+
+This function is most certainly not as fast as the GMP package but it
+was fun to write and to learn about the mechanics behind arbitrary
+precision arithmetic at work. You can view the latest version of this
+code on
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem020.R][GitHub]].
+
+{{< youtube "uNS1QvDzCVw" >}}

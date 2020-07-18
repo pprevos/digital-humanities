@@ -1,0 +1,163 @@
+#+title: Euler Problem 14: Find the Longest Collatz Sequence
+#+date: 2017-03-01 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Network-Analysis Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 14 looks at
+the [[https://en.wikipedia.org/wiki/Collatz_conjecture][Collatz
+Conjecture]]. These playful sequences, named after German mathematician
+Lothar Collatz (1910--1990), cause mathematicians a lot of headaches.
+This video introduces the problem much better than I can describe it.
+
+{{< youtube "5mFpVDpKX70" >}}
+
+** Euler Problem 14 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-14-definition
+   :END:
+
+The following iterative sequence is defined for the set of positive
+integers:
+
+$latex n \rightarrow n/2 $ ( $latex n $ is even)\\
+$latex n \rightarrow 3n + 1 $ ( $latex n $ is odd)
+
+Using the rule above and starting with 13, we generate the following
+sequence:
+
+$latex 13 \rightarrow 40 \rightarrow 20 \rightarrow 10 \rightarrow 5
+\rightarrow 16 \rightarrow 8 \rightarrow 4 \rightarrow 2 \rightarrow 1 $
+
+This sequence (starting at 13 and finishing at 1) contains ten terms.
+Although it has not been proved yet (Collatz Problem), it is thought
+that all starting numbers finish at 1.
+[[https://projecteuler.net/problem=14][Which starting number, under one
+million, produces the longest chain?]] Note: Once the chain starts the
+terms are allowed to go above one million.
+
+You can view the code below or download the most recent version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem014.R][GitHub]].
+
+** Euler Problem 14 Solution
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-14-solution
+   :END:
+
+This problem is highly computationally intensive, and it highlights R's
+lack of speed. Generating one million Collatz sequences and finding the
+longest one requires a lot more than a minute of processing time allowed
+for in Project Euler.
+
+#+BEGIN_EXAMPLE
+  collatz.chain <- function(n) {
+      chain <- vector()
+      i <- 1
+      while (n != 1) {
+          if (n%%2 == 0)
+              n <- n / 2
+          else
+          n <- 3 * n + 1
+          chain[i] <- n
+          i <- i + 1
+      }
+      return(chain)
+  }
+  answer <- 0
+  collatz.max <- 0
+  for (n in 1:1E6) {
+      collatz.length <- length(collatz.chain(n))
+      if (collatz.length > collatz.max) {
+          answer <- n
+          collatz.max <- collatz.length
+      }
+  }
+  print(answer)
+#+END_EXAMPLE
+
+The second version of the code is optimised because it stores the length
+of all sequences in an array. When the code generates a sequence and
+lands on a number already analysed, then it adds that previous number to
+the current one and moves on to the next step. This approach requires
+more memory but saves a lot of computation time. A minor tweak to the
+code optimises the rule for uneven numbers. Tripling an uneven number
+and adding one will always result in an even number so we can skip one
+step. This solution is more than twice as fast as the first version.
+
+#+BEGIN_EXAMPLE
+  collatz.length <- vector(length = 1E6)
+  collatz.length[1] <- 0
+  for (n in 2:1E6) {
+      x <- n
+      count <- 0 
+      while (x != 1 & x >= n) {
+          if (x %% 2 == 0) {
+              x <- x / 2
+              count <- count + 1
+          }
+          else {
+              x <- (3 * x + 1) / 2
+              count <- count + 2
+          }
+      }
+      count <- count + collatz.length[x]
+      collatz.length[n] <- count
+  }
+  answer <- which.max(collatz.length)
+  print(answer)
+#+END_EXAMPLE
+
+** Visualising Collatz Sequences
+   :PROPERTIES:
+   :CUSTOM_ID: visualising-collatz-sequences
+   :END:
+
+The Collatz sequence is an example of a simple mathematical rule that
+can create an unpredictable pattern. The number of steps required to
+reach one is listed in [[https://oeis.org/A006577][A006577]] of the
+Online Encyclopedia of Integer Sequences. The image below visualises the
+number of steps for the first 1000 positive numbers. The scatterplot
+shows some unusual patterns. Does this visualisation show that the
+Collatz Sequence does have a pattern after all?
+
+[[/images/blogs.dir/4/files/sites/4/2017/03/collatz-1.png]]
+
+** Collatz Chains
+   :PROPERTIES:
+   :CUSTOM_ID: collatz-chains
+   :END:
+
+The Collatz sequences can also be visualised using networks. Each step
+between two numbers is an edge and the numbers are the vertices.
+For example, the network for the Collatz sequence for number 10
+is 5--16, 16--8, 8--4, 4--2, 2--1. When generating subsequent sequences
+the network will start to overlap and a tree of sequences appears. The
+tree below combines the Collatz sequences for the numbers 2 to 26.
+Number 27 has a very long sequence, making the tree much harder to read.
+
+[[/images/blogs.dir/4/files/sites/4/2017/03/collatznetwork2-26.png]]
+
+#+BEGIN_EXAMPLE
+  edgelist <- data.frame(a = 2, b = 1)
+  for (n in 3:26) {
+      chain <- as.character(c(n, collatz.chain(n)))
+      chain <- data.frame(a = chain[-length(chain)],
+      b = chain[-1])
+      edgelist <- rbind(edgelist, chain)
+  }
+  library(igraph)
+  g <- graph.edgelist(as.matrix(edgelist))
+  g <- simplify(g)
+  par(mar = rep(0, 4))
+  V(g)$color <- degree(g, mode = "out") + 1
+  plot(g,
+      layout = layout.kamada.kawai,
+      vertex.color = V(g)$color,
+      vertex.size = 6,
+      vertex.label.cex = .7,
+      vertex.label.color = "black",
+      edge.arrow.size = .1,
+      edge.color = "black"
+  )
+#+END_EXAMPLE

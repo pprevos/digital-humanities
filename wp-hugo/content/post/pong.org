@@ -1,0 +1,155 @@
+#+title: R-Cade Games: Simulating the Legendary Pong Game
+#+date: 2017-04-20 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: R-Games R-Language
+#+draft: true
+
+Pong is one of the earliest
+[[https://en.wikipedia.org/wiki/Arcade_game][arcade games]] on the
+market, first released in 1972. From the day I first saw this miracle
+box, I wanted to know more about computers.
+
+I learnt how to write code from the 1983
+book [[https://archive.org/details/Dr_Wackos_Guide_to_Creating_Arcade_Games][Dr.
+C. Wacko's Miracle Guide to Designing and Programming your own Atari
+Computer Arcade Games]]. This book explains in a very clear and
+humorous way how to write computer games in Atari basic. I devoured this
+book and spent many hours developing silly games. This article is an ode
+to Dr Wacko, a computer geek's midlife-crisis and an attempt to
+replicate the software I developed thirty years ago.
+
+[[/images/blogs.dir/9/files/sites/9/2017/04/DrWacko-1024x731.jpg]]
+
+I showed in a previous post that R can be used for
+board [[https://lucidmanager.org/r-games/][games]] or play a game of
+[[https://lucidmanager.org/euler-problem-144/][elliptical pool]]. The
+question is whether we create arcade games in R. My challenge is to
+recreate the look and feel of 1980s arcade games, or /R-Cade/ games,
+using R? The code shown below simulates the legendary game of pong.
+
+** Playing Pong in R
+   :PROPERTIES:
+   :CUSTOM_ID: playing-pong-in-r
+   :END:
+
+The code is based on the Wacko's /Boing Program/ in the above-mentioned
+book. The R code is fully commented and speaks for itself. Please note
+that the animation is very clunky when you run it in
+[[https://support.rstudio.com/hc/en-us/articles/200488548-Problem-with-Plots-or-Graphics-Device][RStudio]]. Only the
+native R Terminal displays the animation correctly.
+
+This version plays automatically with a randomiser routine to render the
+gameplay imperfect. The skill parameter indicates how good the computer
+player is between 0 and 1.
+
+The [[https://cran.r-project.org/web/packages/beepr/index.html][beepr]]
+library by Rasmus Bååth provides some much-needed sound.
+
+The main issue with this code is that I have not been able to ad a human
+Pong player. I am not aware of a way to use continuous input in the R
+language. Perhaps somebody can help me perfect this little ditty. I love
+to know how to read real-time USB input to control the game, so we get a
+step closer to the first R-Cade game.
+
+{{< youtube "https://youtu.be/A6ytTe8KcZ0" >}}
+
+** The Pong Simulation Code
+   :PROPERTIES:
+   :CUSTOM_ID: the-pong-simulation-code
+   :END:
+
+<<uagb-marketing-btn-c896537a-6d8e-4e29-b64e-4bff34ae6ca1>>
+
+[[https://github.com/pprevos/RGames/blob/master/pong.R][]]
+
+****** Download
+       :PROPERTIES:
+       :CUSTOM_ID: download
+       :CLASS: uagb-marketing-btn__title
+       :END:
+
+You can view the Pong code below or download the latest version from
+GitHub.
+
+#+BEGIN_EXAMPLE
+  ## Sound library
+  library(beepr) 
+
+  ## Game parameters
+  skill <- 0.87 # Skill (0-1)
+  score <- 0
+  high.score <- 0
+
+  ## Define playing field
+  x11()
+  par(mar = rep(1,4), bg = "black")
+  plot.new()
+  splot.window(xlim = c(0,30), ylim = c(0,30))
+  lines(c(1, 30, 30, 1), c(0, 0, 30, 30), type = "l", lwd = 5, col = "white")
+
+  ## Playing field boundaries (depends on cex)
+  xmin <- 0.5
+  xmax <- 29.4
+  ymin <- 0.5
+  ymax <- 29.4
+
+  ## initial position
+  x <- sample(5:25, 1)
+  y <- sample(5:25, 1)
+  points(x, y, pch = 15, col = "white", cex = 2)
+
+  ## Paddle control
+  psize <- 4
+  ypaddle <- y
+
+  ## Set direction
+  dx <- runif(1, .5, 1)
+  dy <- runif(1, .5, 1)
+
+  ## Game play
+  while (x > xmin - 1) {
+      sound <- 0 # Silence
+      Sys.sleep(.05) # Pause screen
+      points(x, y, pch = 15, col = "black", cex = 2) # Erase ball
+      # Move ball
+      x <- x + dx
+      y <- y + dy
+      # Collision detection
+      if (x > xmax) {
+          dx <- -dx * runif(1, .9, 1.1) # Bounce
+          if (x > xmin) x <- xmax # Boundary
+          sound <- 10 # Set sound
+          }
+      if (y < ymin | y > ymax) {
+          if (y < ymin) y <- ymin
+          if (y > ymax) y <- ymax
+          dy <- -dy * runif(1, .9, 1.1)
+          sound <- 10
+      }
+      # Caught by paddle?
+      if (x < xmin & (y > ypaddle - (psize / 2)) & y < ypaddle + (psize / 2)) {
+          if (x < xmin) x <- xmin
+          dx <- -dx * runif(1, .9, 1.1)
+          sound <- 2
+          score <- score + 1
+          }
+      # Draw ball
+      points(x, y, pch = 15, col = "white", cex = 2)
+      if (sound !=0) beep(sound)
+      # Move paddle
+      if (runif(1, 0, 1) < skill) ypaddle <- ypaddle + dy # Imperfect follow
+      # Draw paddle
+      # Erase back line
+      lines(c(0, 0), c(0, 30), type = "l", lwd = 8, col = "black")
+      # Keep paddle in window
+      if (ypaddle < (psize / 2)) ypaddle <- (psize / 2)
+      if (ypaddle > 30 - (psize / 2)) ypaddle <- 30 - (psize / 2)
+      # Draw paddle
+      lines(c(0, 0), c(ypaddle - (psize / 2), ypaddle + (psize / 2)), type = "l", lwd = 8, col = "white")
+  }
+  beep(8)
+  text(15,15, "GAME OVER", cex=5, col = "white")
+  s <- ifelse(score == 1, "", "s")
+  text(15,5, paste0(score, " Point", s), cex=3, col = "white")
+#+END_EXAMPLE

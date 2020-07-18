@@ -1,0 +1,263 @@
+#+title: Qualitative Data Science: Using RQDA to analyse interviews
+#+date: 2018-05-03 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Digital-Humanities Marketing Network-Analysis R-Language
+#+draft: true
+
+Qualitative data science sounds like a contradiction in terms. Data
+scientists generally solve problems using numerical solutions. Even the
+analysis of a text is reduced to a numerical problem using Markov
+chains, [[https://lucidmanager.org/rvest-and-tidytext/][topic
+analysis]],
+[[https://lucidmanager.org/tap-water-sentiment-analysis/][sentiment
+analysis]] and other mathematical tools.
+
+Scientists and professionals consider numerical methods to be the gold
+standard of analysis. There is, however, a price to pay when relying on
+numbers alone. Numerical analysis reduces the complexity of the social
+world. When analysing people, numbers present an illusion of precision
+and accuracy. Giving primacy to quantitative research in the social
+sciences comes at a high price. The dynamics of reality are reduced to
+statistics, losing the narrative of the people that the research aims to
+understand.
+
+Being both an engineer and a social scientist, I acknowledge the
+importance of both numerical and qualitative methods. My dissertation
+used a mixed-method approach to review the relationship between employee
+behaviour and customer perception in water utilities. This article
+introduces some aspects of qualitative data science with an example from
+my dissertation.
+
+In this article, I show how I analysed data from interviews using both
+quantitative and qualitative methods and demonstrate why qualitative
+data science is better to understand text than numerical methods. The
+most recent version of the code is available on my
+[[https://github.com/pprevos/Marketing/tree/master/Macromarketing][GitHub
+repository]]. Unfortunately, I cannot share the data set as this
+contains personally identifying data.
+
+[[https://kenandeen.files.wordpress.com/2015/01/quantitave-vs-qualitative.png]]
+
+** Qualitative Data Science
+   :PROPERTIES:
+   :CUSTOM_ID: qualitative-data-science
+   :END:
+
+The often celebrated artificial intelligence of machine learning is
+impressive but does not come close to human intelligence and ability to
+understand the world. Many data scientists are working on automated text
+analysis to solve this issue (the
+[[https://cran.r-project.org/web/packages/topicmodels/][topicmodels]]
+package is an example of such an attempt). These efforts are impressive,
+but even the smartest text analysis algorithm is not able to derive
+/meaning/ from text. To fully embrace all aspects of data science we
+need to be able to methodically undertake
+[[https://en.wikipedia.org/wiki/Qualitative_research][qualitative data
+analysis]].
+
+The capabilities of R in numerical analysis are impressive, but it can
+also assist with Qualitative Data Analysis (QDA). Huang Ronggui from
+Hong Kong developed the [[http://rqda.r-forge.r-project.org/][RQDA
+package]] to analyse texts in R. RQDA assists with qualitative data
+analysis using a GUI front-end to analyse collections texts. The video
+below contains a complete course in using this software. Below the
+video, I share an example from my dissertation which compares
+qualitative and quantitative methods for analysing text.
+
+{{< youtube "plcp" >}}
+
+For my dissertation about
+[[https://lucidmanager.org/invisible-water-utility/][water utility
+marketing]], I interviewed seven people from various organisations. The
+purpose of these interviews was to learn about the value proposition for
+water utilities. The data consists of the transcripts of six interviews
+which I manually coded using RQDA. For reasons of agreed anonymity, I
+cannot provide the raw data file of the interviews through GitHub.
+
+** Numerical Text Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: numerical-text-analysis
+   :END:
+
+Word clouds are a popular method for exploratory analysis of texts. The
+wordcloud is created with the
+[[https://cran.r-project.org/web/packages/tm/index.html][text mining]]
+and wordcloud packages. The transcribed interviews are converted to a
+text corpus (the native format for the tm package) and whitespace,
+punctuation etc is removed. This code snippet opens the RQDA file and
+extracts the texts from the database. RQDA stores all text in an SQLite
+database and the package provides a query command to extract data.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(RQDA)
+  library(tm)
+  library(wordcloud)
+  library(igraph)
+
+  openProject("stakeholders.rqda")
+  interviews <- data.frame(name = RQDAQuery("SELECT name FROM source"),
+                           text = RQDAQuery("SELECT file FROM source"))
+  interviews <- Corpus(VectorSource(interviews$file))
+
+  interviews <-  tm_map(interviews, stripWhitespace)
+  interviews <-  tm_map(interviews, content_transformer(tolower))
+  interviews <-  tm_map(interviews, removeWords, stopwords("english"))
+  interviews <-  tm_map(interviews, removePunctuation)
+  interviews <-  tm_map(interviews, removeNumbers)
+  interviews <-  tm_map(interviews, removeWords, c("interviewer", "interviewee"))
+
+  # Word cloud
+  set.seed(1969)
+  wordcloud(interviews, min.freq = 10, max.words = 50, rot.per=0.35, 
+            colors = brewer.pal(8, "Blues")[-1:-5])
+#+END_EXAMPLE
+
+#+CAPTION: Word cloud of interview transcripts
+[[/images/blogs.dir/4/files/sites/4/2018/05/wordcloud.png]]
+
+This word cloud makes it clear that the interviews are about water
+businesses and customers, which is a pretty obvious statement. The
+interviews are also about the opinion of the interviewees (think). While
+the word cloud is aesthetically pleasing and provides a quick snapshot
+of the content of the texts, they cannot inform us about their meaning.
+
+Topic modelling is a more advanced method to extract information from
+the text by assessing the proximity of words to each other. The
+[[https://eight2late.wordpress.com/2015/09/29/a-gentle-introduction-to-topic-modeling-using-r/][topic
+modelling]] package provides functions to perform this analysis. I am
+not an expert in this field and simply followed basic steps using
+default settings with four topics.
+
+#+BEGIN_EXAMPLE
+  dtm <- DocumentTermMatrix(interviews)
+  dtm <- removeSparseTerms(dtm, 0.99)
+  ldaOut <- LDA(dtm, k = 4)
+  terms(ldaOut,6)
+#+END_EXAMPLE
+
+This code converts the corpus created earlier into a
+[[https://en.wikipedia.org/wiki/Document-term_matrix][Document-Term
+Matrix]], which is a matrix of words and documents (the interviews) and
+the frequency at which each of these words occurs. The LDA function
+applies a
+[[https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation][Latent
+Dietrich Allocation]] to the matrix to define the topics. The variable k
+defines the number of anticipated topics. An LDA is similar to
+clustering in multivariate data. The final output is a table with six
+words for each topic.
+
+[table id=2 /]
+
+This table does not tell me much at all about what was discussed in the
+interviews. Perhaps it is the frequent use of the word "water" or
+"think"---I did ask people their opinion about water-related issues. To
+make this analysis more meaningful, I could perhaps manually remove the
+words water, yeah, and so on. This introduces a bias in the analysis and
+reduces the reliability of the topic analysis because I would be
+interfering with the text.
+
+Numerical text analysis sees a text as a bag of words instead of a set
+of meaningful words. It seems that any automated text mining needs a lot
+of manual cleaning to derive anything meaningful. This excursion shows
+that automated text analysis is not a sure-fire way to analyse the
+meaning of a collection of words. After a lot of trial and error to try
+to make this work, I decided to go back to my roots of qualitative
+analysis using RQDA as my tool.
+
+** Qualitative Data Science Using RQDA
+   :PROPERTIES:
+   :CUSTOM_ID: qualitative-data-science-using-rqda
+   :END:
+
+To use RQDA for qualitative data science, you first need to manually
+analyse each text and assign codes (topics) to parts of the text. The
+image below shows a question and answer and how it was coded. All marked
+text is blue, and the codes are shown between markers. Coding a text is
+an iterative process that aims to extract meaning from a text. The
+advantage of this method compared to numerical analysis is that the
+researcher injects meaning into the analysis. The disadvantage is that
+the analysis will always be biased, which in the social sciences is
+unavoidable. My list of topics was based on words that appear in a
+marketing dictionary so that I analysed the interviews from that
+perspective.
+
+#+CAPTION: Example of text coded with RQDA.
+[[/images/blogs.dir/4/files/sites/4/2018/05/coding.png]]
+
+My first step was to look at the occurrence of codes (themes) in each of
+the interviews.
+
+#+BEGIN_EXAMPLE
+  ## Load and transform data
+  codings <- getCodingTable()[,4:5]
+  categories <- RQDAQuery("SELECT filecat.name AS category, source.name AS filename 
+                           FROM treefile, filecat, source 
+                           WHERE treefile.catid=filecat.catid AND treefile.fid=source.id AND treefile.status=1")
+  codings <- merge(codings, categories, all.y = TRUE)
+  head(codings)
+
+  ## Open coding
+  reorder_size <- function(x) {
+      factor(x, levels = names(sort(table(x))))
+  }
+  ggplot(codings, aes(reorder_size(codename), fill=category)) + geom_bar(stat="count") + 
+      facet_grid(~filename) + coord_flip() + 
+      theme(legend.position="bottom", legend.title=element_blank()) + 
+      ylab("Code frequency in interviews") + xlab("Code")
+#+END_EXAMPLE
+
+The code uses an internal RQDA function /getCodingTable/ to obtain the
+primary data. The /RQDAQuery/ function provides more flexibility and
+enables more complex queries of the data. You can view the structure of
+the RQDA database using the /RQDATables/ function.
+
+#+CAPTION: The occurrence of themes from six interviews.
+[[/images/blogs.dir/4/files/sites/4/2017/02/interviewcode.png]]
+
+This bar chart helps to explore the topics that interviewees discussed,
+but it does not help to understand how these topic relate to each other.
+This method provides better insights into the text than the 'bag of
+words' approach. Qualitative data analysis provides meaning to a text
+that no algorithm can discern. Although this meaning is ultimately
+subjective, proper methodology clarified any biases.
+
+RQDA provides a facility to assign each code to a code category. A
+network diagram is a good tool to visualise this structure. The igraph
+package provides extensive functionality to analyse graphs.
+
+Qualitative data analysis can create value from a text by interpreting
+it from a given perspective. This article is not even an introduction to
+the science and art of qualitative data science. I hope it invites you
+to explore RQDA and similar tools.
+
+If you are interested in finding out more about this method, then feel
+free to read chapter three of my dissertation on
+[[http://hdl.handle.net/1959.9/561679][customer service in water
+utilities]].
+
+#+CAPTION: The network of interview topics.
+[[/images/blogs.dir/4/files/sites/4/2018/05/network.png]]
+
+*** Network visualisation code
+    :PROPERTIES:
+    :CUSTOM_ID: network-visualisation-code
+    :END:
+
+#+BEGIN_EXAMPLE
+  edges <- RQDAQuery("SELECT codecat.name, freecode.name FROM codecat, freecode, treecode WHERE codecat.catid=treecode.catid AND freecode.id=treecode.cid")
+
+  g <- graph_from_edgelist(as.matrix(edges), directed = FALSE) %>%
+    simplify()
+  V(g)$name <- gsub(" ", "\n", V(g)$name)
+
+  c <- spinglass.community(g)
+  par(mar=rep(0,4))
+  set.seed(666)
+  plot(c, g, 
+       vertex.size = 10,
+       vertex.color = NA,
+       vertex.frame.color = NA,
+       layout = layout.drl)
+#+END_EXAMPLE

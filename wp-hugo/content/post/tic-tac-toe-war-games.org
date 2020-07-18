@@ -1,0 +1,300 @@
+#+title: Tic Tac Toe Simulation: The Intelligent Minimax Algorithm
+#+date: 2017-06-08 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: R-Games R-Language
+#+draft: true
+
+One of my favourite movies is /WarGames/. One of the most memorable
+scenes is where the protagonist tries to teach the out-of-control AI
+that a nuclear war is unwinnable with a Tic Tac Toe simulation.
+
+Tic Tac Toe might be a futile children's game but it can also teach
+us about artificial intelligence. Tic Tac Toe, or Noughts and Crosses,
+is a [[https://en.wikipedia.org/wiki/Zero-sum_game][zero-sum game]] with
+perfect information. Both players have full information about each
+other. When nobody makes a mistake, the game always ends in a draw.
+
+This article describes how to self-playing game of Tic Tac Toe, complete
+with a graphical interface, in the R language. This article is part of a
+series about [[https://lucidmanager.org/r-games/][computer games]] in
+the R Language.
+
+The first two parts of the article describe how to create the user
+interface and add a human player. The second part delves into creating
+computer players. My ultimate aim is to recreate this iconic scene in
+{{< youtube "the /[[F7qOV8xonfY][WarGames]]/ movie." >}}
+
+<<uagb-cta-block-bf94c859-2fc3-4f8c-a8d2-e138450f82c3>>
+
+*** Download Tic Tac Toe in R
+    :PROPERTIES:
+    :CUSTOM_ID: download-tic-tac-toe-in-r
+    :CLASS: uagb-cta__title
+    :END:
+
+You can view the code below or download it from
+[[https://github.com/pprevos/RGames/tree/master/TicTacToe][GitHub]].
+
+Download
+
+** The Game Board
+   :PROPERTIES:
+   :CUSTOM_ID: the-game-board
+   :END:
+
+This first code snippet draws the Tic Tac Toe simulation board. The
+variable =xo= holds the identity of the pieces and the vector =board=
+holds the current game. The game board is a vector of length nine
+consisting of either -1 (X), 0 (empty field) or 1 (O). The vector
+indices correspond with locations on the game board:
+
+1 2 3\\
+4 5 6\\
+7 8 9
+
+The second part of the code checks for three in a row and draws the
+corresponding line.
+
+#+BEGIN_EXAMPLE
+  draw.board <- function(game) {
+      xo <- c("X", " ", "O") # Symbols
+      par(mar = rep(1,4))
+      plot.new()
+      plot.window(xlim = c(0,30), ylim = c(0,30))
+      abline(h = c(10, 20), col = "darkgrey", lwd = 4)
+      abline(v = c(10, 20), col = "darkgrey", lwd = 4)
+      text(rep(c(5, 15, 25), 3), c(rep(25, 3), rep(15,3), rep(5, 3)), 
+           xo[game + 2], cex = 4)
+      # Identify location of any three in a row
+      square <- matrix(game, nrow = 3, byrow = TRUE)
+      hor <- abs(rowSums(square))
+      if (any(hor == 3)) 
+          hor <- (4 - which(hor == 3)) * 10 - 5 
+      else 
+          hor <- 0
+      ver <- abs(colSums(square))
+      if (any(ver == 3)) 
+          ver <- which(ver == 3) * 10 - 5 
+      else
+          ver <- 0
+      diag1 <- sum(diag(square))
+      diag2 <- sum(diag(t(apply(square, 2, rev)))) 
+      # Draw winning lines 
+      if (all(hor > 0))
+          for (i in hor)
+              lines(c(0, 30), rep(i, 2), lwd = 10, col="red")
+      if (all(ver > 0))
+          for (i in ver)
+              lines(rep(i, 2), c(0, 30), lwd = 10, col="red")
+      if (abs(diag1) == 3)
+          lines(c(2, 28), c(28, 2), lwd = 10, col = "red")
+      if (abs(diag2) == 3)
+          lines(c(2, 28), c(2, 28), lwd = 10, col = "red")
+  }
+#+END_EXAMPLE
+
+** Human Player
+   :PROPERTIES:
+   :CUSTOM_ID: human-player
+   :END:
+
+This second code snippet lets a human player move by clicking anywhere
+on the graphic display using the
+[[https://www.rdocumentation.org/packages/graphics/versions/3.6.2/topics/locator][locator]]
+function. The click location is converted to a number to denote the
+position on the board. The entered field is only accepted if it has not
+yet been used (the =empty= variable contains the available fields).
+
+#+BEGIN_EXAMPLE
+  move.human <- function(game) {
+      text(4, 0, "Click on screen to move", col = "grey", cex=.7)
+      empty <- which(game == 0)
+      move <- 0
+      while (!move %in% empty) {
+          coords <- locator(n = 1) # add lines
+          coords$x <- floor(abs(coords$x) / 10) + 1
+          coords$y <- floor(abs(coords$y) / 10) + 1
+          move <- coords$x + 3 * (3 - coords$y)
+      }
+      return(move)
+  }
+#+END_EXAMPLE
+
+** Human Player
+   :PROPERTIES:
+   :CUSTOM_ID: human-player-1
+   :END:
+
+The computer uses a modified
+[[https://en.wikipedia.org/wiki/Minimax][Minimax Algorithm]] to
+determine its next move. This article from the
+[[http://neverstopbuilding.com/minimax][Never Stop Building]] blog and
+the video below explain this method in great detail.
+
+{{< youtube "6kFKnB6JtcY" >}}
+
+If the computer moves first, the algorithm takes a while because of the
+large number of permutations. There
+are [[http://www.se16.info/hgb/tictactoe.htm][255,168 possible legal
+games]] in Tic Tac Toe, 46,080 (18%) of which end in a draw.
+
+The code for this part is contributed by a reader (see comments below).
+I originally made a mistake in the recurring function and Alberto was so
+kind to contribute a correct version.
+
+The /ganador/ (Spanish for winning) function assesses the board
+condition by assigning -10 or + 10 for a winning game and 0 for any
+other situation.
+
+The minimax function returns a list with the move and its valuation
+through the ganador function. The function calls itself until it has
+filled the board and retains the best scoring move using the minimax
+method. Random variables are added to avoid the computer always playing
+the same move in the same situation.
+
+#+BEGIN_EXAMPLE
+  ganador <- function(juego, player) {
+      game <- matrix(juego, nrow = 3, byrow = T)
+      hor <- rowSums(game)
+      ver <- colSums(game)
+      diag <- c(sum(diag(game)), sum(diag(apply(game, 1, rev))))
+      if (-3 %in% c(hor, ver, diag))
+          return(-10)
+      if (3 %in% c(hor, ver, diag))
+          return(10)
+      else
+          return(0)
+  }
+
+  minimax <- function(juego, player) {
+      free <- which(juego == 0)
+      if(length(free) == 1) {
+          juego[free] <- player
+          return(list(move = free, U = ganador(juego, player)))
+      }
+      poss.results <- rep(0, 9)
+      for(i in free) {
+          game <- juego
+          game[i] <- player
+          poss.results[i] <- ganador(game, player)
+      }
+      mm <- ifelse(player == -1, "which.min", "which.max")
+      if(any(poss.results == (player * 10))) {
+          move <- do.call(mm, list(poss.results))
+          return(list(move = move, U = poss.results[move]))
+      }
+      for(i in free) {
+          game <- juego
+          game[i] <- player
+          poss.results[i] <- minimax(game, -player)$U
+      }
+      random <- runif(9, 0, 0.1)
+      poss.results[-free] <- 100 * -player
+      poss.results <- poss.results + (player * random)
+      move <- do.call(mm, list(poss.results))
+      return(list(move = move, U = poss.results[move]))
+  }
+#+END_EXAMPLE
+
+** Play Tic Tac Toe
+   :PROPERTIES:
+   :CUSTOM_ID: play-tic-tac-toe
+   :END:
+
+The last bit of code defines a function to play the game. Each layer can
+be either a human or a computer. The function loops while there are
+still empty spots on the board and no winner is declared.
+
+#+BEGIN_EXAMPLE
+  tic.tac.toe <- function(player1 = "human", player2 = "computer") {
+      game <- rep(0, 9) # Empty board
+      winner <- 0 # Define winner
+      player <- 1 # First player
+      players <- c(player1, player2)
+      draw.board(game)
+      while (0 %in% game & winner == 0) { # Keep playing until win or full board
+          if (players[(player + 3) %% 3] == "human") # Human player
+              move <- move.human(game)
+          else { # Computer player
+              move <- minimax(game, player)[[1]]
+              }
+          game[move] <- player # Change board
+          draw.board(game)
+          winner <- ganador(game, player)
+          player <- -player # Change player
+      }
+      if (winner == 0)
+          text(15, 15 , "DRAW", col = "red", cex = 10)
+  }
+
+  tic.tac.toe()
+#+END_EXAMPLE
+
+** Wargames Simulation
+   :PROPERTIES:
+   :CUSTOM_ID: wargames-simulation
+   :END:
+
+Now all elements are in place to recreate the simulation in the
+/Wargames/ movie. The animation package helps to create an animated gif
+where the computer keeps playing itself. All games end in a draw.
+
+[[/images/blogs.dir/9/files/sites/9/2019/05/wargames.gif]]
+
+#+BEGIN_EXAMPLE
+  library(animation)
+
+  ## WAR GAMES TIC TAC TOE
+  draw.board.wargames <- function(game) {
+      xo <- c("X", " ", "O") # Symbols
+      par(mar = rep(1,4), bg = "#050811")
+      plot.new()
+      plot.window(xlim = c(0,30), ylim = c(0,30))
+      abline(h = c(10, 20), col = "#588fca", lwd = 20)
+      abline(v = c(10, 20), col = "#588fca", lwd = 20)
+      text(rep(c(5, 15, 25), 3), c(rep(25, 3), rep(15,3), rep(5, 3)), xo[game + 2],
+           cex = 20, col = "#588fca")
+      text(0, 0, "lucidmanager.org", col = "#588fca", cex = 2, adj = 0)
+      ## Identify location of any three in a row
+      square <- t(matrix(game, nrow = 3))
+      hor <- abs(rowSums(square))
+      if (any(hor == 3)) 
+          hor <- (4 - which(hor == 3)) * 10 - 5 
+      else 
+          hor <- 0
+      ver <- abs(colSums(square))
+      if (any(ver == 3)) 
+          ver <- which(ver == 3) * 10 - 5 
+      else
+          ver <- 0
+      diag1 <- sum(diag(square))
+      diag2 <- sum(diag(t(apply(square, 2, rev)))) 
+      ## Draw winning lines 
+      if (all(hor > 0)) for (i in hor) lines(c(0, 30), rep(i, 2), lwd = 20, col="#588fca")
+      if (all(ver > 0)) for (i in ver) lines(rep(i, 2), c(0, 30), lwd = 20, col="#588fca")
+      if (abs(diag1) == 3) lines(c(2, 28), c(28, 2), lwd = 20, col = "#588fca")
+      if (abs(diag2) == 3) lines(c(2, 28), c(2, 28), lwd = 20, col = "#588fca")
+  }
+
+  saveGIF ({
+      for (i in 1:10) {
+          game <- rep(0, 9) # Empty board
+          winner <- 0 # Define winner
+          player <- -1 # First 
+          while (0 %in% game & winner == 0) {
+              empty <- which(game == 0) # Define empty squares
+              if (length(empty) == 9)
+                  move <- empty[sample(length(empty), 1)] # Random move
+              else
+                  move <- minimax(game, player)[[1]]
+              game[move] <- player # Change board
+              draw.board.wargames(game)
+              winner <- ganador(game) # Evaulate game
+              player <- -player # Change player
+          }
+      }
+  },
+  interval = .1, movie.name = "wargames.gif",
+  ani.width = 1024, ani.height = 1024)
+#+END_EXAMPLE

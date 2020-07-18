@@ -1,0 +1,166 @@
+#+title: Approximations of Pi: A Random Walk though the Beauty of Pi
+#+date: 2018-04-19 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile R-Language
+#+draft: true
+
+Off all thinkable numbers, Pi has somewhat of celebrity status. It is so
+famous it even has its holiday. Mathematicians who use the American way
+to write dates recognise March the 14th as Pi Day. Some authors have
+even assigned a mystical status to the number of Pi. In the novel
+[[https://www.bookdepository.com/Contact-Carl-Sagan/9781857235807?a_aid=horizonofreason][/Contact/
+by Carl Sagan]], the heroine Ellie discovers a hidden message in the
+base-11 representation of Pi. In the 1998 film
+[[http://www.imdb.com/title/tt0138704/][Pi by ]]Darren Aronofsky, the
+protagonist is driven mad by the idea that a
+[[https://horizonofreason.com/pi-approximation-day/][secret pattern]] in
+random numbers. The string of numbers that form the decimals of Pi might
+seem random, but they are of course perfectly predictable and
+calculable. Their apparent randomness can create artful visualisations.
+
+This article discusses some approximations of Pi using the R language
+and visualises the results. The video below is an ode to the aesthetic
+beauty of the digits of Pi by Numberphile.
+
+{{< youtube "NPoj8lk9Fo4" >}}
+
+** Approximations of Pi
+   :PROPERTIES:
+   :CUSTOM_ID: approximations-of-pi
+   :END:
+
+My favourite approximation of Pi has served me well through the early
+part of my engineering career. When using calculators that did not have
+a button for $latex \pi $, I used =22/7=. It is only accurate to two
+decimals, but that is more than enough for dredging projects.
+
+The base R language can provide 22 decimals of Pi using
+=options(digits = 22)=. If you need more accuracy, then the
+[[https://cran.r-project.org/web/packages/Rmpfr/index.html][MPFR
+package]] in R provides a library for multiple-precision floating-point
+computations. The =Const= function can compute Pi to a high level of
+precision with thousands of digits.
+
+#+BEGIN_EXAMPLE
+  library(rmpfr)
+  pi_mpfr <- Const("pi", prec = 200000)
+#+END_EXAMPLE
+
+There are also more creative ways to determine the number Pi using Monte
+Carlo simulations. Imagine you are terribly bored, sitting inside a room
+with floorboards. You decide to take a match with length $latex l&s=1$
+and the floorboards are $latex t&s=1$ wide. The needle is half the
+length of the width of the floorboards ($latex t/l = 2&s=1$). You drop
+the matchstick randomly for about ten million times ($latex
+n=10,000,000&s=1$) and you record every time the needle crosses the
+groove of one of the boards ($latex o&s=1$). This thought experiment is
+known as [[https://en.wikipedia.org/wiki/Buffon%27s_needle][Buffon's
+needle]]. The number Pi can be approximated by:
+
+$latex \pi \approx \frac{c \cdot l}{o \cdot t} &s=3$
+
+This bit of code simulates dropping the needle ten million times, which
+gives an estimated value of $latex \pi \approx 3.143096 &s=1$. You would
+have to be extremely bored to throw a needle that many times to only
+achieve ccuracy to two decimals!
+
+#+BEGIN_EXAMPLE
+  t <- 2
+  l <- 1
+  n <- 10000000
+
+  needles <- data_frame(phi = runif(n, 0, 2 * pi),
+             x1 = runif(n, 0, (l + 3)), 
+             y1 = runif(n, 0, (l + 3)),
+             x2 = x1 + l * sin(phi),
+             y2 = y1 + l * cos(phi), 
+             overlap = (x1 < 1 & x2 > 1) | (x1 < 3 & x2 > 3))
+
+  ggplot(needles[1:1000,], aes(x1, y1)) + 
+    geom_segment(aes(xend = x2, yend = y2, colour = overlap)) + 
+    geom_vline(xintercept = c(1, 3), colour = "red") +
+    scale_color_manual(values = c("gray", "black")) + 
+    theme_void() 
+  ggsave("Misc/buffon.png", dpi = 300)
+
+  pi_buffon <- (n * l) / (sum(needles$overlap) * t)
+#+END_EXAMPLE
+
+#+CAPTION: Visualising Buffon's Needle thought experiment.
+[[/images/blogs.dir/4/files/sites/4/2018/04/buffon.png]]
+
+** Visualising the approximations of Pi
+   :PROPERTIES:
+   :CUSTOM_ID: visualising-the-approximations-of-pi
+   :END:
+
+In 1888, the John Venn, inventor of the eponymous Venn diagram, wanted
+to visualise the apparent randomness of the digits of Pi. He obtained
+the first 707 digits of Pi from amateur mathematician William Shanks.
+Unfortunately, only the first 527 decimals of Pi were correct but this
+was only discovered in 1944. Venn assigned a compass point to the digits
+0 to 7 and then drew lines to show the path indicated by each digit,
+ignoring the digits 8 and 9.
+
+Running through the values of Pi this way produces a line that snakes
+its way through the graph. When you use random numbers with the same
+method, the graph looks very similar. In this case, I have downloaded
+the digits of Pi from the /On-Line Encyclopedia of Integer Sequences/
+(Nr. [[http://oeis.org/A000796][A000796]]).
+
+ 
+
+#+CAPTION: A random walk through the digits of Pi - The Venn method.
+[[/images/blogs.dir/4/files/sites/4/2018/04/venn_pi_walk.png]]
+
+The Numberphile video shows some beautiful visualisations of Pi, one of
+which I like to share with you to close this
+article. [[http://mkweb.bcgsc.ca/pi/][Martin Krzywinski]] created this,
+and many other, visualisations of Pi.
+
+#+CAPTION: Approximations of Pi: Art work that visualises the random
+nature of the decimals of Pi
+[[/images/blogs.dir/4/files/sites/4/2018/04/pi_dots.png]]
+
+As always, you can find the latest version of this code on
+[[https://github.com/pprevos/r.prevos.net/blob/master/Miscellaneous/Mathematics/VennPi.R][GitHub]].
+Feel free to subscribe to this blog if you like to receive articles in
+your mailbox.
+
+#+BEGIN_EXAMPLE
+  ## Download Pi Digits
+  pi_digits <- read.csv("http://oeis.org/A000796/b000796.txt", header = FALSE, sep = " ", skip = 1) %>%
+    select(digit = V2)
+
+  ## Venn walk
+  venn_walk <- function(digits) {
+    digits <- digits[digits != 8 & digits != 9]
+    l <- length(digits) - 1
+    x <- rep(0, l)
+    y <- x
+    for (i in 1:l) {
+      a <- digits[i + 1] * pi / 4
+      dx <- round(sin(a))
+      dy <- round(cos(a))
+      x[i + 1] <- x[i] + dx 
+      y[i + 1] <- y[i] + dy
+    }
+    coords <- data_frame(x = x, y = y)
+    ggplot(coords, aes(x, y)) + 
+      geom_path() + 
+      geom_point(data = coords[c(1, l + 1), ], aes(x, y), colour = "red", size = 2) + 
+      theme_void()
+  }
+  venn_walk(pi_digits)
+
+  data_frame(x = rep(1:20, 20),
+             y = unlist(lapply(1:20, function(x) rep(x, 20))),
+             d = pi_digits$digit[1:400]) %>%
+    mutate(d = factor(d)) %>%
+    ggplot(aes(x, y, colour = d)) + geom_point(size = 3) +
+    theme_void() + 
+    theme(plot.background = element_rect(fill = "black"),
+          panel.background = element_rect(fill = "black"),
+          legend.position="none")
+#+END_EXAMPLE

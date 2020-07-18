@@ -1,0 +1,134 @@
+#+title: Lexicographic Permutations: Proposed Solution to Euler Problem 24
+#+date: 2017-06-15 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 24 asks to develop
+[[https://en.wikipedia.org/wiki/Permutation#Generation_in_lexicographic_order][lexicographic
+permutations]] which are ordered arrangements of objects in
+lexicographic order. Tushar Roy of /Coding Made Simple/ has shared a
+great introduction on how to generate lexicographic permutations.
+
+{{< youtube "nYFd7VHKyWQ" >}}
+
+String Permutation Algorithm.
+
+** Euler Problem 24 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-24-definition
+   :END:
+
+A permutation is an ordered arrangement of objects. For example, 3124 is
+one possible permutation of the digits 1, 2, 3 and 4. If all of the
+permutations are listed numerically or alphabetically, we call it
+lexicographic order. The lexicographic permutations of 0, 1 and 2 are:
+
+012 021 102 120 201 210
+
+What is the [[https://projecteuler.net/problem=24][millionth
+lexicographic permutation]] of the digits 0, 1, 2, 3, 4, 5, 6, 7, 8 and
+9?
+
+** Brute Force Solution
+   :PROPERTIES:
+   :CUSTOM_ID: brute-force-solution
+   :END:
+
+The digits 0 to 9 have $latex 10 ! = 3628800 $ permutations (including
+combinations that start with 0). Most of these permutations are,
+however, not in lexicographic order. A brute-force way to solve the
+problem is to determine the next lexicographic permutation of a number
+string and repeat this one million times.
+
+#+BEGIN_EXAMPLE
+  nextPerm <- function(a) {
+      # Find longest non-increasing suffix
+      i <- length(a)
+      while (i > 1 && a[i - 1] >= a[i])
+          i <- i - 1
+      # i is the head index of the suffix
+      # Are we at the last permutation?
+      if (i <= 1) return (NA)
+      # a[i - 1] is the pivot
+      # Frind rightmost element that exceeds the pivot
+      j <- length(a)
+      while (a[j] <= a[i - 1]) 
+          j <- j - 1
+      # Swap pivot with j
+      temp <- a[i - 1]
+      a[i - 1] <- a[j]
+      a[j] <- temp
+      # Reverse the suffix
+      a[i:length(a)] <- rev(a[i:length(a)])
+      return(a)
+      }
+
+  numbers <- 0:9
+  for (i in 1:(1E6 - 1)) numbers <- nextPerm(numbers)
+  answer <- paste(numbers, collapse = "")
+  print(answer)
+#+END_EXAMPLE
+
+This code takes the following
+[[https://www.nayuki.io/page/next-lexicographical-permutation-algorithm][steps]]:
+
+1. Find largest index $latex i$ such that $latex a_{i-1} < a_i$.
+
+   1. If no such index exists, then this is already the last
+      permutation.
+
+2. Find largest index $latex j$ such that $latex j \geq i$ and $latex
+   a_j > a_{i-1}$.
+3. Swap $latex a_j &s=2$ and $latex a_{i-1}$.
+4. Reverse the suffix starting at $latex a_i$.
+
+** Combinatorics
+   :PROPERTIES:
+   :CUSTOM_ID: combinatorics
+   :END:
+
+A more efficient solution is to use combinatorics, thanks to
+[[http://www.mathblog.dk/project-euler-24-millionth-lexicographic-permutation/][MathBlog]].
+The last nine digits can be ordered in $latex 9! = 362880$ ways. So the
+first $latex 9!$ permutations start with a 0. By extending this thought,
+it follows that the millionth permutation must start with a 2.
+
+$latex \lfloor (1000000 - 1) / 9 ! \rfloor  = 2$
+
+From this rule, it follows that the 725761^{st} permutation is
+2013456789. We now need 274239 more lexicographic permutations:
+
+$latex (1000000 - 1) - (2 \times 9!) = 274239$
+
+We can repeat this logic to find the next digit. The last 8 digits can
+be ordered in 40320 ways. The second digit is the 6th digit in the
+remaining numbers, which is 7 (2013456789).
+
+$latex \lfloor 274239 / 8 ! \rfloor  = 6$
+
+$latex 274239 - (6 \times 7 !) = 32319$
+
+This process is repeated until all digits have been used. View the code
+bleow or download the latest version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem024.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  numbers <- 0:9
+  n <- length(numbers)
+  answer <- vector(length = 10)
+  remain <- 1E6 - 1
+  for (i in 1:n) {
+      j <- floor(remain / factorial(n - i))
+      answer[i] <- numbers[j + 1]
+      remain <- remain %% factorial(n - i)
+      numbers <- numbers[-(j + 1)]
+  }
+  answer <- paste(answer, collapse = "")
+  print(answer)
+#+END_EXAMPLE
+
+R blogger [[https://www.r-bloggers.com/project-euler-problem-24/][Tony's
+Bubble Universe]] created a generalised function to solve this problem a
+few years ago.

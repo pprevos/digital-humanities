@@ -1,0 +1,118 @@
+#+title: Defining a Water Quality Index to Communicate System Performance
+#+date: 2014-02-01 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics R-Language Water-Quality
+#+draft: true
+
+Reporting water quality performance to senior management or customers
+can be problematic as it requires a myriad of numbers and trying to
+pronounce parameters---impossible words such as clostridium perfringens,
+polydiallyldimethylammonium or bromochloroacetonitrile are not part of
+the vocabulary of most people. These terms appear in the
+[[https://nhmrc.gov.au/about-us/publications/australian-drinking-water-guidelines][Australian
+Drinking Water Guidelines]] (2011). Directors and customers of utilities
+are generally not water quality specialists and that need to be provided
+with easy to digest information for them to be able to assess how
+drinking water supply systems perform. A water quality index is
+currently in development to achieve this goal.
+
+The index is aimed at reducing complex data matrices to a single number,
+combining information from various sources. The index provides an
+overview of water quality performance, without mentioning technical
+details. The overall index consists of five parameters: treatment
+effectiveness, network protection, regulatory compliance and customer
+perception.
+
+Given the broad nature of these parameters---from subjective assessments
+by customers to objective laboratory data---a certain level of
+subjectivity is unavoidable. The different aspects of the index will not
+contribute equally to the overall performance of water supply: How
+should we view customer complaints about laboratory data?
+
+** Methodology
+   :PROPERTIES:
+   :CUSTOM_ID: methodology
+   :END:
+
+A crowd-sourcing tactic was employed in the form of a survey to seek the
+collective opinion of water quality experts. A total of 36 responses
+were received from Australia, New Zealand, the USA and Europe. The
+survey was closed on 31 January 2014.
+
+Respondents were asked about their involvement in water quality (such as
+level of education and amount of experience in the field). The primary
+survey consisted of two question banks regarding the relative importance
+of each of the proposed index factors and network sub-factors. Data was
+analysed using the using statistical package /R/. Responses can be
+considered reliable as the average standard error is less than 5%. The
+complete survey results and detailed analysis can be viewed on
+[[http://rpubs.com/pprevos/wqindex][Rpubs]]. The raw scores on the main
+questions are presented in the diagrams below. The levels on the Y-axis
+are the relative importance (0--100) given to each of the parameters by
+respondents.
+
+#+CAPTION: Water Quality Index survey results (n=36).
+[[http://lucidmanager.org/wp-content/blogs.dir/4/files/sites/4/2014/02/wqindex-1024x768.png]]
+
+** Water Quality Index Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: water-quality-index-analysis
+   :END:
+
+The individual results regarding the relative importance of the
+different factors and sub-factors are self-explanatory. These survey
+results will weight the final index scores. Additionally, some
+meta-analysis has been undertaken to obtain insight into the
+complexities of assessing water quality performance. Factor analysis
+with varimax rotation revealed that a one-factor solution is capable of
+explaining 49% of the variance. This is an indication that questions
+were answered consistently among respondents and that item scores can be
+interpreted as originating from one
+[[http://en.wikipedia.org/wiki/Latent_variable][latent variable]], i.e.
+water quality performance.
+
+Ten respondents also provided additional comments regarding the water
+quality index. Some respondents mentioned that the questions were
+“simplistic”, “ambiguous“ and “inaccurate”. This problem is, however,
+inherent to the data reduction and simplicity objectives of the water
+quality index. The index's ambiguity and inaccuracy are a reflection of
+the fact that information is sourced from paradigmatically different
+sources such as customer feedback and laboratory results.
+
+Due to the reduction in data complexity, the index, its factors and
+sub-factors cannot be used for quantitative analysis. The index is, in
+essence, a qualitative expression of water quality performance only
+suitable for communication and not for analysis.
+
+One respondent also commented on the relationship between physical and
+biological water quality parameters and customer's perception of these:
+
+#+BEGIN_QUOTE
+  Focus on water safety sometimes gets clouded by issues associated with
+  customer aesthetic opinion.
+#+END_QUOTE
+
+This statement is an expression of the
+[[https://lucidmanager.org/safe-water-versus-good-water/][water quality
+paradox]]. Even if the quality of the water meets regulations, customers
+might still not be satisfied. Providing safe water is a
+[[http://en.wikipedia.org/wiki/Necessity_and_sufficiency][necessary
+condition, but not a sufficient condition]] to achieve customer
+satisfaction.
+
+** Conclusion
+   :PROPERTIES:
+   :CUSTOM_ID: conclusion
+   :END:
+
+The survey has been successful and will aid in completing a water
+quality index that reflects the relative importance of the different
+aspects of water quality. The comments made by water quality experts are
+a typical expression of the difference in thought worlds between
+[[https://lucidmanager.org/engineering-marketing-interface/][scientists
+and customer service professionals]] and aid in further developing a
+theoretical model for organisational culture in water utilities.
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

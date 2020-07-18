@@ -1,0 +1,39 @@
+#+title: Analysing Bathymetric Data for Water Reservoirs
+#+date: 2019-05-19 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics R-Language
+#+draft: true
+
+The first step in the value chain for water utilities is to
+
+The Maryland Geological Survey investigates the geology and water
+resources of the American state of Maryland. The MGS publishes
+bathymetric data for many of the reservoirs in Maryland. This article
+uses data from the
+[[http://www.mgs.md.gov/coastal_geology/prettyboy.html][Pretyboy
+Reservoir]], near Greenmount.
+
+<<uagb-google-map-160912ec-9d90-4e85-8178-887a4d03b32c>>
+[googlemaps
+https://www.google.com/maps/embed/v1/place?key=AIzaSyAsd_d46higiozY-zNqtr7zdA81Soswje4&q=prettyboy%20reservoir&zoom=12&w=425&h=350]
+
+** Estimating Reservoir Volume
+   :PROPERTIES:
+   :CUSTOM_ID: estimating-reservoir-volume
+   :END:
+
+In the early day of my engineering career, I
+
+** Exploratory Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: exploratory-analysis
+   :END:
+
+** Estimating Reservoir Volume
+   :PROPERTIES:
+   :CUSTOM_ID: estimating-reservoir-volume-1
+   :END:
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

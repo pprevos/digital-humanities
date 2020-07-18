@@ -1,0 +1,105 @@
+#+title: Pandigital Products: Euler Problem 32
+#+date: 2017-09-21 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 32 returns to
+[[https://lucidmanager.org/euler-problem-29-distinct-powers/][pandigital
+numbers]], which are numbers that contain one of each digit. Like so
+many of the Euler Problems, these numbers serve no practical purpose
+whatsoever. Just like
+[[https://lucidmanager.org/euler-problem-4/][palindromic products]],
+other than some entertainment value and increasing your understanding of
+numbers.
+
+You can find all pandigital numbers in base-10 in the Online
+Encyclopedia of Integers ([[https://oeis.org/A050278][A050278]]). The
+Numberphile video explains everything you ever wanted to know about
+pandigital numbers but were afraid to ask.
+
+{{< youtube "9s" >}}
+
+Why 381,654,729 is awesome - Numberphile.
+
+** Euler Problem 32 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-32-definition
+   :END:
+
+We shall say that an /n/-digit number is pandigital if it makes use of
+all the digits 1 to /n/ exactly once; for example, the 5-digit number,
+15234, is 1 through 5 pandigital.
+
+The product 7254 is unusual, as the identity, 39 × 186 = 7254,
+containing multiplicand, multiplier, and product is 1 through 9
+pandigital.
+
+Find the sum of all products whose multiplicand/multiplier/product
+identity can be written as a 1 through 9 pandigital.
+
+HINT: Some products can be obtained in more than one way so be sure to
+only include it once in your sum.
+
+** Proposed Solution
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solution
+   :END:
+
+The =pandigital.9= function tests whether a string classifies as a
+pandigital number. The =pandigital.prod=\\
+vector stores the multiplication.
+
+The only way to solve this problem is by brute force and try all
+multiplications. We can limit the solution space to a manageable number.
+The multiplication needs to have ten digits. For example, when the
+starting number has two digits, the second number should have three
+digits so that the total has four digits, e.g.: 39 × 186 = 7254. When
+the first number only has one digit, the second number needs to have
+four digits.
+
+You can view the code below or download the most recent version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem032.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  pandigital.9 <- function(x) # Test if string is 9-pandigital
+      (length(x)==9 & sum(duplicated(x))==0 & sum(x==0)==0)
+
+  pandigital.prod <- vector()
+  i <- 1
+  for (m in 2:100) {
+      if (m < 10) 
+          n_start <- 1234 
+      else 
+          n_start <- 123
+      for (n in n_start:round(10000 / m)) {
+          # List of digits
+          digs <- as.numeric(unlist(strsplit(paste0(m, n, m * n), "")))
+          # is Pandigital?
+          if (pandigital.9(digs)) {
+              pandigital.prod[i] <- m * n
+              i <- i + 1
+              print(paste(m, "*", n, "=", m * n))
+          }
+      }
+  }
+  answer <- sum(unique(pandigital.prod))
+  print(answer)
+
+  largest <- 6 * 9^5
+  answer <- 0
+  for (n in 2:largest) {
+      power.sum <- 0
+      i <- n
+      while (i > 0) {
+          d <- i %% 10
+          i <- floor(i / 10)
+          power.sum <- power.sum + d^5
+      }
+      if (power.sum == n) {
+          answer <- answer + n
+      }
+  }
+  print(answer)
+#+END_EXAMPLE

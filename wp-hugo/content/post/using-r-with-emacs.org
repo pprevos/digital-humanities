@@ -1,0 +1,191 @@
+#+title: Using R with Emacs and ESS - A Multifunctional Environment
+#+date: 2018-06-14 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Productivity R-Language
+#+draft: true
+
+A few years ago I ditched the spreadsheet in favour of writing code in
+R. During the process I learnt a valuable lesson: The steeper the
+learning curve, the larger the reward. My time invested in learning R
+has paid off in spades, and I now use the R language for all my
+numerical and
+[[https://lucidmanager.org/qualitative-data-science/][qualitative
+analysis]].
+
+Most data scientists solve data problems with the R language using the
+[[https://www.rstudio.com/][RStudio]] IDE, a free and open-source
+Integrated Development Environment. Although RStudio is a great product,
+like all other software products, it's functionality is limited to doing
+one thing well. My major problem with Studio is that it has limited
+editing functions, which makes writing complex documents in RMarkdown
+problematic. The editing functions in Emacs are amazing and will allow
+you to become a much more efficient writer.
+
+Since last year I use [[https://www.gnu.org/software/emacs/][Emacs]] and
+once again the rule that a steep learning curve has a valuable reward
+has come true. Emacs is the Swiss army chainsaw of productivity, the
+ultimate killer app and also one of the
+[[https://www.emacswiki.org/emacs/EmacsHistory][oldest]] active pieces
+of software. Although it might seem that newer is better when it comes
+to software, Emacs has continuously evolved. The power of Emacs is its
+extensive functionality and virtually infinite customisability. Almost
+ninety per cent of all my computing activity now takes place within
+Emacs. I use it to write notes, manage my action lists, write e-mails,
+articles, books. The [[https://orgmode.org/][Org mode]] package in Emacs
+is the working horse that undertakes many of these functions. Since
+recently also to write R code in Emacs and ESS.
+
+To master Emacs to the level, I am at now has taken me a couple of
+months. Initially, the bewildering amount of keyboard shortcuts is a
+challenge, but your muscle memory will soon kick in, and your fingers
+will glide across the keyboard like an eagle.
+
+#+CAPTION: Using R with Emacs and ESS: Org Mode with embedded R code to
+write an academic paper in APA format.
+[[/images/blogs.dir/4/files/sites/4/2018/06/emacs-1024x580.png]]
+
+** Using R with Emacs and ESS
+   :PROPERTIES:
+   :CUSTOM_ID: using-r-with-emacs-and-ess
+   :END:
+
+The advantage of using Emacs over RStudio is that I can seamlessly
+switch between my notes, to-do lists, calendars and so on, while also
+developing code. There is no need to install, maintain and master
+multiple applications as Emacs cover almost all my computing needs. Just
+like R, Emacs includes thousands of packages that extend its
+functionality far beyond what one would expect from a text editor.
+
+The disadvantage of Emacs compared to RStudio is that it is not as
+pretty and the screen more resembles an angry fruit salad than a slick
+material design. The image above shows my screen when I translated a
+paper about body image research into Org Mode with embedded R code. A
+temporary disadvantage is that there is a bit of preparation is required
+to enable coding in Emacs, but that is only a temporary hurdle and adds
+to the learning curve.
+
+This article explains how to start Using R with Emacs and ESS
+([[https://ess.r-project.org/][Emacs Speaks Statistics]]). The first
+section of this article provides links to resources on how to install
+Emacs on various platforms and how to enable it to start writing code in
+R with the ESS package. The second sections show how to use the R
+console and source files. The last section introduces literate
+programming by combining Org Mode and R and exporting the results to
+PDF, HTML etc.
+
+** Getting Started with Emacs
+   :PROPERTIES:
+   :CUSTOM_ID: getting-started-with-emacs
+   :END:
+
+Installing Emacs depends on your operating system. A simple Google
+search will tell you what to do. The video playlist below shows how to
+install Emacs on Ubuntu, OS X or Windows 10. You will also need to
+install the [[https://www.r-project.org/][R language]] on your machine,
+and if you like to create publication-quality output, the also include
+[[https://www.latex-project.org/][LaTeX]].
+
+{{< youtube "PLGx4TR_jvOQAmztGFrV7SO6vTjSaiXTUo" >}}
+
+Emacs needs an
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Init-File.html][init
+file]] to make the software behave the way you want it to.. You can
+download a minimal-working init file (=init.el=) from my
+[[https://github.com/pprevos/r.prevos.net/tree/master/Miscellaneous/BodyImage][GitHub
+repository]].
+
+To install packages, type =M-x list-packages=. This function displays
+all available packages. In Emacs-speak this means pressing the Alt
+(modify) key and the lowercase 'x' key, followed by 'list-packages' and
+return. You can find ESS by pressing 'f' and search for the package.
+Type 'i' to mark it for installation and press 'x' to install the
+selected packages. The example init file loads the following packages
+that need to be manually installed:
+
+- [[https://ess.r-project.org/][ESS]]: Emacs Speaks Statistics.
+- [[https://github.com/mattfidler/ess-smart-underscore.el][ESS Smart
+  Underscore]]: Smarter underscore for Emacs Speaks Statistics.
+- [[https://github.com/jkitchin/org-ref][Org-Ref]]: org-mode modules for
+  citations, cross-references, bibliographies in org-mode and useful
+  BibTeX tools to go with it.
+- [[https://github.com/auto-complete/auto-complete][auto-complete]]:
+  Auto-completion for GNU Emacs.
+
+** Using R with Emacs and ESS
+   :PROPERTIES:
+   :CUSTOM_ID: using-r-with-emacs-and-ess-1
+   :END:
+
+To start using R with Emacs type =M-x R RET=. ESS will ask to nominate a
+working directory and opens a new buffer with the name =*R*=. You can
+now use the R console to write code. You can open multiple instances of
+the R console with different working directories and environment, just
+like projects in RStudio.
+
+Emacs recognises any file with the .R extension as the R language. This
+functionality is a so-called Emacs major mode, which is the essential
+functionality of Emacs. A
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modes.html][major
+mode]] defines how Emacs manages buffers, whether it is an R file, an
+Org Mode file and so on. Each mode has its own specialised functions
+that enhance the basic functionality.
+
+One bit of useful information is that the underscore key is mapped to
+the =<-= assignment operator. If you need an underscore, you need to
+type it twice in a row. This functionality can be annoying when you are
+an avid user of ggplot. The
+[[https://github.com/mattfidler/ess-smart-underscore.el][ess-smart-underscore]]
+package solves this issue by extending the functionality of ESS. You can
+install this package in the same way you installed ESS itself. To enable
+it, add =(require 'ess-smart-underscore)= to your init file.
+
+To write in a source file, you can create a .R file by typing =C-x C-f=
+([[https://www.gnu.org/software/emacs/manual/html_node/emacs/Visiting.html][find-file]]
+function). Type the filename to create a new file, or when it already
+exists, open the file. You can now start writing R code as you would in
+any other editor. As soon as you evaluate code for the first time in a
+session, ESS will ask you what the starting project directory is. The
+default folder is the one that your .R file is in. To evaluate the whole
+buffer, use =C-c B=, to evaluate a section use =C-c c= and to evaluate a
+line press =M-RET=.
+
+To show the source file and the R console next to each other, type
+=C-x 3= to
+[[https://www.gnu.org/software/emacs/manual/html_node/emacs/Split-Window.html][split
+your window]] to show two buffers. You can then use =C-x b= to select
+the other buffer.
+
+A disadvantage of using R in ESS is that there is no simple way to
+integrate plot outputs into the Emacs window. When I am iteratively
+working on visualisation, I save it to a file and open it in a separate
+buffer, as shown in the screendump.
+
+** Using R with Emacs and ESS to Write an Academic Paper
+   :PROPERTIES:
+   :CUSTOM_ID: using-r-with-emacs-and-ess-to-write-an-academic-paper
+   :END:
+
+Org Mode is the most popular extension of Emacs which comes precompiled
+with current versions of the software. Org Mode is an extremely
+versatile text editing extension. I use it to manage my projects using a
+calendar and To-Do lists, I write notes, write books and articles. I
+have translated an article I previously wrote
+[[https://lucidmanager.org/r-sweave-and-latex/][LaTeX and Sweave]] to
+Org mode.
+
+Org Mode works very well with
+[[https://orgmode.org/manual/LaTeX-Export.html#LaTeX-Export][LaTeX]].
+You will need to write some code into your init file to set a template,
+after which writing LaTeX code is a breeze. The
+[[https://orgmode.org/worg/org-contrib/babel/][Org Babel]] package
+functions as an interface between Org mode and R. Perhaps explaining
+this file in detail is a topic for a future post. You can view the most
+recent version of the Org File and the associated setting in the init
+file on my
+[[https://github.com/pprevos/r.prevos.net/tree/master/Miscellaneous/BodyImage][GitHub
+page]].
+
+#+CAPTION: Using R with Emacs and ESS: Org Mode with embedded R code to
+write an academic paper in APA format.
+[[/images/blogs.dir/4/files/sites/4/2018/06/openbook_1000x647.jpg]]

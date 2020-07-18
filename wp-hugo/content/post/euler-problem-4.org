@@ -1,0 +1,133 @@
+#+title: Euler Problem 4: Largest Palindromic Product and Lychrel Numbers
+#+date: 2016-12-22 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 4 takes us to the palindromic numbers, a number that is
+the same when reading it backwards. Almost all non-palindromic number
+can be converted to a palindromic number through the Lychrel process.
+The non-palindromic number is reversed, and the result is added to the
+original number. If the result is not a palindromic number, this is
+repeated until it gives a palindromic number. For example, 56 + 65 =
+121. As another example, 125 + 521 = 646, which is a palindromic number.
+
+Any number that will never become a palindrome is called a
+[[https://en.wikipedia.org/wiki/Lychrel_number][Lychrel number]]. The
+number 196 does not become a palindrome, even after hundreds of
+thousands of iterations. However, there is no proof that Lychrel numbers
+exist. If we write some code to undertake the Lychrel process, we would
+never be certain whether it eventually will stop, which is the infamous
+[[https://en.wikipedia.org/wiki/Halting_problem][halting problem]].
+
+{{< youtube "bN8PE3eljdA" >}}
+
+** Euler Problem 4 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-4-definition
+   :END:
+
+A palindromic number reads the same both ways. The largest
+[[https://en.wikipedia.org/wiki/Palindromic_number][palindrome]] made
+from the product of two 2-digit numbers is 9009 = 91 × 99. Find the
+[[https://projecteuler.net/problem=4][largest palindrome]] made from the
+product of two 3-digit numbers.
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+This code searches for palindromic numbers, starting at the highest
+values. The palindromes are tested by converting the number to a
+character string. When the first palindromic number is found, the loop
+is broken.
+
+The =reverse= function reverses any number and the =palindrome= function
+tests if the reverse is the same as the original number.
+
+You can view the code below, or download the latest version of this code
+on
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem004.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  ## Reverse a number
+  reverse <- function(n) {
+      reverse <- 0
+      while (n > 0) {
+          remainder <- n %% 10
+          reverse <- 10 * reverse + remainder
+          n <- floor(n / 10)
+      }
+      return(reverse)
+  }
+
+  ## Test for palindrome
+  palindrome <- function(x) {
+      return(x == reverse(x))
+  }
+
+  ## Euler problem 4
+  for (i in 999:900) {
+      for (j in 990:900) {
+          p <- i * j
+          if (palindrome(p)) 
+              break
+      }
+      if (palindrome(p)) {
+          break
+      }
+  }
+  answer <- i * j
+  print(answer)
+#+END_EXAMPLE
+
+Searching a bit further results in twelve palindromic numbers made from
+the product of two 2-digit numbers.
+
+Sequence [[https://oeis.org/A002113][A002113]] in the Online
+Encyclopedia of Integer Sequences (OEIS) lists palindromes in base 10.
+The graph below shows the number of palindromic numbers between 0 and 1
+million.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  p_max <- 1.5E5
+  A002113 <- which(lapply(1:p, palindrome) == TRUE)
+  data_frame(x = 1:p_max,
+  y = sapply(1:p_max, function(p) length(A002113[A002113 < p])) ) %>%
+      ggplot(aes(x, y)) +
+          geom_line() +
+          xlab("") +
+          ylab("Palindromic numbers <n")
+#+END_EXAMPLE
+
+[[/images/blogs.dir/4/files/sites/4/2016/12/problem004-1024x768.png]]
+
+** Lychrel Numbers
+   :PROPERTIES:
+   :CUSTOM_ID: lychrel-numbers
+   :END:
+
+Sequence [[https://oeis.org/A023108][A023108]] of the Online
+Encyclopedia of Integers lists number that apparently never iterate to
+become a palindrome.
+
+This function tests a number for Lychrel property by following
+the palindrome process. Unfortunately, there is no way of telling if it
+will ever stop for certain numbers.
+
+#+BEGIN_EXAMPLE
+  lychrel <- function(l) {
+      while(!palindrome(l))
+          l <- l + reverse(l)
+      return(l)
+  }
+  ## Firest 195 non-Lychrel numbers
+  options(digits=22)
+  sapply(1:195, lychrel)
+
+  ## This function call apparently never halts
+  lychrel(196)
+#+END_EXAMPLE

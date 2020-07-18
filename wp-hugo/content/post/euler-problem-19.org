@@ -1,0 +1,126 @@
+#+title: Euler Problem 19: Counting Sundays — When does the week start?
+#+date: 2017-05-04 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 19 is so trivial it is almost not worth writing an article
+about. One interesting aspect of this problem is the naming of weekdays
+and deciding which day the week starts. This issue is more complex than
+it sounds because data science is in essence not about data but about
+people.
+
+{{< youtube "JEyuQd-zMeg" >}}
+
+Where do days of the week get their names?
+
+** Euler Problem 19 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-19-definition
+   :END:
+
+- 1 Jan 1900 was a Monday.
+- Thirty days has September, April, June and November.
+- All the rest have thirty-one,
+- Saving February alone, Which has twenty-eight, rain or shine. And on
+  leap years, twenty-nine.
+- A leap year occurs on any year evenly divisible by 4, but not on a
+  century unless it is divisible by 400.
+
+[[https://projecteuler.net/problem=19][How many Sundays]] fell on the
+first of the month during the twentieth century (1 Jan 1901 to 31 Dec
+2000)?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The problem can be quickly solved with R base code and a tiny bit faster
+when using the
+[[https://cran.r-project.org/web/packages/lubridate/][lubridate
+package]].
+
+#+BEGIN_EXAMPLE
+  dates <- seq.Date(as.Date("1901-01-01"), as.Date("2000-12-31"), "days")
+  days <- rep(1:7, length.out = length(dates))
+  answer <- sum(days[substr(dates, 9, 10) == "01"] == 1)
+  print(answer)
+
+  #Using Lubridate
+  library(lubridate, quietly = TRUE)
+  answer <- sum(wday(dates[substr(dates, 9, 10) == "01"]) == 1)
+  print(answer)
+#+END_EXAMPLE
+
+To draw out this post a little bit further, I wrote some code to solve
+the problem without using any of the calendar functions in R.
+
+#+BEGIN_EXAMPLE
+  week.day <- 0
+  answer <- 0
+  for (y in 1901:2000) {
+      for (m in 1:12) {
+          max.day <- 31
+          if (m %in% c(4, 6, 9, 11))
+              max.day <- 30
+          # Leap years
+          if (m == 2) {
+              if (y %% 4 == 0 & y %% 100 != 0 | y %% 400 == 0) 
+                  max.day <- 29
+              else 
+                  max.day <- 28
+          }
+          for (d in 1:max.day) {
+              week.day <- week.day + 1
+              if (week.day == 8) week.day <- 1
+              if (week.day == 1 & d == 1)
+              answer <- answer + 1
+          }
+      }
+  }
+  print(answer)
+#+END_EXAMPLE
+
+You can download the latest version of this code from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem019.R][GitHub]].
+
+** Which day does the week start?
+   :PROPERTIES:
+   :CUSTOM_ID: which-day-does-the-week-start
+   :END:
+
+The only aspect remotely interesting about this problem is the
+conversion from weekdays to numbers. In R, Monday is considered day one,
+which makes sense in the Christian context of Western culture. Saturday
+and Sunday are the weekends, the two last days of the week so they are
+day 6 and 7. According to international standard
+[[http://www.iso.org/iso/home/standards/iso8601.htm][ISO 8601]], Monday
+is the first day of the week. Although this is the international
+standard, several countries, including the United States and Canada,
+consider Sunday to be the first day of the week.
+
+The international standard is biased towards Christianity. The Christian
+or Western world marks Sunday as their day of rest and worship. Muslims
+refer to Friday as their day of rest and prayer. The Jewish calendar
+counts Saturday---the Sabbath---as the day of rest and worship. This
+idea is also shared by Seventh-Day Adventists.
+
+#+CAPTION: First day of the week around the world.
+[[/images/blogs.dir/9/files/sites/9/2017/05/DayoftheWeek-1024x379.png]]
+
+This Euler problem shows that data science is not only about data: it is
+always how people
+[[https://lucidmanager.org/qualitative-data-science/][interpret the
+world]].
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  firstday <- read_csv("FirstDay.csv")
+  world <- map_data(map = "world") full_join(world, firstday) %>%
+      ggplot(aes(long, lat, group = group, fill = firstday)) +
+      geom_polygon() +
+          theme_void() +
+          coord_fixed()
+#+END_EXAMPLE

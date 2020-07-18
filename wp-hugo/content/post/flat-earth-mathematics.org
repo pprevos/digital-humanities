@@ -1,0 +1,269 @@
+#+title: Flat Earth Mathematics with examples in the R Language
+#+date: 2018-09-02 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: geocode Map-Porn R-Language
+#+draft: true
+
+In September 2018 I embarked on a trip around the world to speak at the
+[[http://worldwatercongress.org/][World Water Congress]] in Tokyo. I
+also visited family and friends in the Netherlands and did some tourism
+in San Francisco. One of the workshops I speak at is about Fake News in
+the water industry. There are many fake stories about
+[[https://lucidmanager.org/invisible-water-utility/][tap water]] in
+circulation on the web. Most of those relate to the use chlorine
+fluoride and most recently smart meters. The internet provides humanity
+with almost unlimited knowledge, but instead, they use it to spread
+conspiracy theories.
+
+One of the craziest fake news trends is the flat earth conspiracy. Some
+of you might ask whether my trip actually /around/ the world or am I
+travelling across a /flat disk/? This article discusses flat earth
+mathematics, and how to convert and visualise map projections in R. This
+article uses the code I published earlier in articles about
+[[https://lucidmanager.org/pacific-island-hopping/][creating flight
+maps]] and [[https://lucidmanager.org/pacific-island-hopping/][Pacific
+island hopping]]. You can view the code below or download the full
+version from
+[[https://github.com/pprevos/geography/blob/master/flatearth.R][GitHub]].
+
+** The Flat Earth
+   :PROPERTIES:
+   :CUSTOM_ID: the-flat-earth
+   :END:
+
+YouTube contains thousands of videos from people that claim the earth is
+flat. These people pontificate that science as we know it is a
+"globalist conspiracy". The claims about a flat earth are hilarious and
+entertaining. People who believe our planet is flat even conduct simple
+experiments and engage in naive flat earth mathematics. Needless to say
+that these experiments are not very convincing, but I respect their
+entrepreneurial attitude.
+
+Adherents to the idea that the world is flat often propose
+[[https://amzn.to/2Pxh3I7][Gleason's Map]] as their version of the
+correct representation of our planet. Every printed map of the earth is
+flat, but somehow this one seems to have a special status.
+
+The Gleason map is not a map of a flat earth but a polar
+[[https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection][azimuthal
+equidistant projection]] of the globe. Even though the map itself states
+that it is a /projection/ of the world, flat earth believers
+nevertheless see it as a literal representation of the world they live
+on.
+
+[[/images/blogs.dir/4/files/sites/4/2018/09/gleasons_map.jpg]]
+
+Their belief is based on an appeal to common sense as the world appears
+to be flat when we look at the horizon. The second ingredient is a deep
+distrust in science, often inspired by religious motives.
+
+This article shows two different ways to look at the earth and show that
+the spherical model better fits the reality of my trip around the world.
+
+Projecting the spherical earth on a flat surface is a complex task. Maps
+require compromise as it is impossible to truthfully draw the surface of
+the globe on a piece of paper without distortion. The video below
+provides a practical introduction to map projections and shows how maps
+are stretched to display them on a flat surface.
+
+{{< youtube "kIID5FDi2JQ" >}}
+
+Practical map projections.
+
+The Azimuthal equidistant method is popularised in the flag of the
+United Nations. Antarctica is in this projection displayed as a ring
+around the world because the south pole projects to infinity. Flat earth
+evangelists believe that the South Pole a ring of ice that prevents us
+from proceeding beyond the disc. The edge of this disc cannot be shown
+because this method projects the south pole at an infinite distance from
+the centre of the map. We can recreate Gleason's map with
+[[https://ggplot2.tidyverse.org/reference/coord_map.html][ggplot]],
+which incorporates the
+[[https://cran.r-project.org/web/packages/mapproj/index.html][mapproj
+package]] to show maps in various projections.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  world <- map_data("world")
+  worldmap <- ggplot(world) +
+      geom_path(aes(x = long, y = lat, group = group), size = .2) +
+      theme(axis.text = element_blank(),
+            axis.ticks = element_blank()) +
+      labs(x = "", y = "")
+  worldmap + 
+      coord_map("azequidistant", orientation = c(90, 0, 270))
+#+END_EXAMPLE
+
+The
+[[https://ggplot2.tidyverse.org/reference/coord_map.html][coord_map]]
+function allows you to change projections. The orientation argument
+defines the centre point of the projection. The most common location is
+the North Pole (90, 0). The third value gives the clockwise rotation in
+degrees. Gleason's map uses a rotation of 270 degrees.
+
+#+CAPTION: Polar azimuthal equidistant projection with ggmap.
+[[/images/blogs.dir/4/files/sites/4/2018/09/azequidistant.png]]
+
+** My Round-the-World Itinerary
+   :PROPERTIES:
+   :CUSTOM_ID: my-round-the-world-itinerary
+   :END:
+
+My trip started in Australia, onward to Japan, from where I go to the
+Netherlands. The last two legs will bring me back to Australia via San
+Francisco. The itinerary is stored in a data frame. The ggmap package
+geocodes the longitude and latitude of each of the locations on my trip.
+You will need a Google API to enable the
+[[https://lucidmanager.org/geocoding-with-ggmap/][geocoding function]].
+As the earth is a sphere, an intermediate point needs to be added for
+trips that pass the dateline, as I explained in my article about
+[[https://lucidmanager.org/create-air-travel-route-maps/][flight maps]].
+
+The geosphere package helps to estimate the total travel distance. The
+travel distance is approximately 38,995 km, slightly less than a trip
+around the equator. This distance is the
+[[https://en.wikipedia.org/wiki/Great-circle_distance][great circle
+distance]], which is the shortest distance between two points on a
+sphere. The flight paths on this map are curved because of the
+inevitable distortions when projecting a sphere on a flat surface.
+
+*** Round the World Itinerary
+    :PROPERTIES:
+    :CUSTOM_ID: round-the-world-itinerary
+    :END:
+
+#+BEGIN_EXAMPLE
+  library(ggmap)
+  api <- readLines("google.api") # Text file with the secret API key
+  register_google(key = api)
+  airports <- c("Melbourne", "Tokyo", "Amsterdam", "San Francisco")
+  itinerary <- geocode(airports)
+  itinerary <- rbind(itinerary, itinerary[1, ]) %>%
+      mutate(location = c(airports, airports[1]))
+
+  ## Split travel past dateline
+  dl <- which(diff(itinerary$lon) > 180)
+  dr <- ifelse(itinerary$lon[dl] < 0, -180, 180)
+  dateline <- tibble(lon = c(dr, -dr),
+                     lat = rep(mean(itinerary$lat[dl:(dl + 1)]), 2),
+                     location = "dateline")
+  itinerary <- rbind(itinerary[1:dl, ], dateline,
+                     itinerary[(dl + 1):nrow(itinerary), ])
+  itinerary
+
+  ## Visualise
+  worldmap +
+      geom_point(data = itinerary, aes(lon, lat), colour = "red", size = 4) +
+      geom_path(data = itinerary, aes(lon, lat), colour = "red", size = 1) +
+      coord_map("azequidistant", orientation = c(90, 0, 270))
+
+  ## Great Circle Distance
+  library(geosphere)
+  sapply(1:(nrow(itinerary) - 1), function(l)
+      distVincentyEllipsoid(itinerary[l, 1:2], itinerary[(l + 1), 1:2]) / 1000) %>%
+      sum()
+#+END_EXAMPLE
+
+#+CAPTION: Round the world trip in polar Azimuthal equidistant
+projection.
+[[/images/blogs.dir/4/files/sites/4/2018/09/rtw.png]]
+
+** Flat Earth Mathematics
+   :PROPERTIES:
+   :CUSTOM_ID: flat-earth-mathematics
+   :END:
+
+If the Gleason map were an actual map of the flat earth, then the flight
+paths on the map would show as straight lines.
+
+The
+[[https://cran.r-project.org/web/packages/mapproj/index.html][mapproj
+package]] contains the mapproject function that calculates the projected
+coordinates based on longitude and latitude. The output of this function
+is a grid with limits from $latex -\pi$ to $latex \pi$. The first part
+of the code converts the longitude and latitude from the world data
+frame to projected coordinates.
+
+A line from the lon/lat 0,0 to the north pole has a projected distance
+of $latex \pi/2$, which in the spherical world is $latex \pi / 2 *
+6378.137 = 10018.75$ km. We need to multiply the Euclidean distances
+with the radius of the Earth to derive the Gleason map coordinates.
+
+This last code snippet converts the world map to flat earth coordinates.
+It calculates the Euclidean distance between the points on the itinerary
+and multiplies this with the Earth's diameter.
+
+The best way to show that Gleason's map is not a map of a flat earth is
+best demonstrated with a flight between Australia and Chili because the
+distortions are huge in the Southern hemisphere. This last code snippet
+shows why the Gleason map is not a map of a flat earth. On this map, the
+shortest distance between Sydney and Santiago de Chili is about 25,000
+km, more than twice the real value. The
+[[https://www.travelmath.com/from/Sydney,+Australia/to/Santiago,+Chile][actual
+travel time]] is about 14 hours, which implies that passenger jets break
+the sound barrier. This problem exists for all journeys along the lines
+of latitude in the Southern hemisphere.
+
+This map looks like the first one, but the coordinate system is now
+Euclidean instead of polar (longitudes and latitudes), as indicated by
+the square grid. On a projected map, the shortest distance is a curved
+line, parallel to Antarctica, which is how ships and aeroplanes move
+between these cities.
+
+#+CAPTION: Sydney to Santiago de Chili on a flat earth map.
+[[/images/blogs.dir/4/files/sites/4/2018/09/flatearth.png]]
+
+** Conclusion
+   :PROPERTIES:
+   :CUSTOM_ID: conclusion
+   :END:
+
+This article proves that the Gleason map is not a representation of a
+flat earth. Aeroplanes would have to break the sound barrier to fly
+these distances in the time it takes to travel. Whichever way you
+project the globe on a flat map will lead to inevitable distortions. The
+Gleason map itself mentions that it is a projection and not a flat
+earth. However, these facts will not dissuade people from believing in a
+flat earth. I am after all an engineer and thus part of the globalist
+science conspiracy.
+
+** The Flat Earth Mathematics Code
+   :PROPERTIES:
+   :CUSTOM_ID: the-flat-earth-mathematics-code
+   :END:
+
+You can view the complete code on my
+[[https://github.com/pprevos/geography/blob/master/flatearth.R][GitHub]]
+repository.
+
+#+BEGIN_EXAMPLE
+  library(mapproj)
+  flatearth.coords <- mapproject(world$long, world$lat,
+                          "azequidistant", orientation = c(90, 0, 270))
+  r <- 6378.137
+  flatearth.coords <- mutate(world,
+                  x = flatearth.coords$x * r,
+                  y = flatearth.coords$y * r) %>%
+      select(x, y, group, order, region, subregion)
+
+  flatearth <- ggplot(flatearth.coords) +
+      geom_path(aes(x, y, group = group), size = .2) +
+      theme(axis.text = element_blank(),
+            axis.ticks = element_blank()) +
+      labs(x = "", y = "")
+
+  ## Australia - South America
+  airports <- tibble(city = c("Sydney", "Santiago de Chili"))
+  itinerary <- geocode(airports$city) %>%
+      mutate(location = airports$city)
+  itinerary
+  coords <- mapproject(itinerary$lon, itinerary$lat, "azequidistant",
+                       orientation = c(90, 0, 270))
+  coords <- tibble(x = coords$x * r, y = coords$y * r)
+  sum(sqrt(diff(coords$x)^2 + diff(coords$y)^2))
+
+  flatearth + 
+      geom_point(data = coords, aes(x, y), colour = "red", size = 4) +
+      geom_path(data = coords, aes(x, y), colour = "red", size = 1)
+#+END_EXAMPLE

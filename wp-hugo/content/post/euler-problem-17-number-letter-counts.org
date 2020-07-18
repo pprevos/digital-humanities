@@ -1,0 +1,143 @@
+#+title: Euler Problem 17: Number letter counts in various languages
+#+date: 2017-03-22 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 17 asks to count the letters in numbers written as words.
+This is a skill we all learnt in primary school mainly useful when
+writing cheques---to those that still use them. The principle for this
+problem is similar to
+[[https://lucidmanager.org/euler-problem-22-names-scores/][Euler Problem
+22]], which analyses given names.
+
+Each language has its own rules for writing numbers. My native language
+Dutch has very different logic to English. Both Dutch and English use
+compound words after the number twelve.
+
+Linguists have theorised this is evidence that early Germanic numbers
+were duodecimal. This factoid is supported by the importance of a
+"dozen" as a counting word and the twelve hours in the clock. There is
+even a Dozenal Society that promotes the use of a number system based on
+12.
+
+{{< youtube "U6xJfP7-HCc" >}}
+
+The English language changes the rules when reaching the number 21.
+While we say eight-teen in English, we do no say "one-twenty". Dutch
+stays consistent and the last number is always spoken first. For
+example, 37 in English is "thirty-seven", while in Dutch it is written
+as "zevenendertig" (seven and thirty).
+
+** Euler Problem 17 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-17-definition
+   :END:
+
+If the numbers 1 to 5 are written out in words: one, two, three, four,
+five, then there are 3 + 3 + 5 + 4 + 4 = 19 letters used in total. If
+all the numbers from 1 to 1000 (one thousand) inclusive were written out
+in words, [[https://projecteuler.net/problem=17][how many letters would
+be used]]?
+
+NOTE: Do not count spaces or hyphens. For example, 342 (three hundred
+and forty-two) contains 23 letters and 115 (one hundred and fifteen)
+contains 20 letters. The use of "and" when writing out numbers is in
+compliance with British usage.
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The first piece of code provides a function that generates the words for
+numbers 1 to 999,999. This is more than the problem asks for, but it
+might be a useful function for another application. The last line
+concatenates all words together and removes the spaces. View download
+the latest version of this code, including different languages, from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem017.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  numword.en <- function(x) {
+      if (x > 999999) return("Error: Oustide my vocabulary")
+      # Vocabulary 
+      single <- c("one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+      teens <- c( "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen")
+      tens <- c("ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety")
+      numword.10 <- function (y) {
+          a <- y %% 100
+          if (a != 0) {
+              and <- ifelse(y > 100, "and", "")
+              if (a < 20)
+                  return (c(and, c(single, teens)[a]))
+              else
+                  return (c(and, tens[floor(a / 10)], single[a %% 10]))
+          }
+      }
+      numword.100 <- function (y) {
+          a <- (floor(y / 100) %% 100) %% 10
+          if (a != 0)
+              return (c(single[a], "hundred"))
+      }
+      numword.1000 <- function(y) {
+          a <- (1000 * floor(y / 1000)) / 1000
+          if (a != 0)
+              return (c(numword.100(a), numword.10(a), "thousand"))
+      }
+      numword <- paste(c(numword.1000(x), numword.100(x), numword.10(x)), collapse=" ")
+      return (trimws(numword))
+  }
+
+  answer <- nchar(gsub(" ", "", paste0(sapply(1:1000, numword.en), collapse="")))
+  print(answer)
+#+END_EXAMPLE
+
+** Writing Numbers in Dutch
+   :PROPERTIES:
+   :CUSTOM_ID: writing-numbers-in-dutch
+   :END:
+
+I went beyond Euler Problem 17 by translating the code to spell numbers
+in Dutch. Interesting bit of trivia is that it takes 307 fewer
+characters to spell the numbers 1 to 1000 in Dutch than it does in
+English. It would be good if other people can submit functions for other
+languages in the comment section. Perhaps we can create an R package
+with a multi-lingual function for spelling numbers.
+
+#+BEGIN_EXAMPLE
+  numword.nl <- function(x) {
+      if (x > 999999) return("Error: Getal te hoog.")
+      single <- c("een", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen")
+      teens <- c( "tien", "elf", "twaalf", "dertien", "veertien", "fifteen", "zestien", "zeventien", "achtien", "negentien")
+      tens <- c("tien", "twintig", "dertig", "veertig", "vijftig", "zestig", "zeventig", "tachtig", "negengtig")
+      numword.10 <- function(y) {
+          a <- y %% 100
+          if (a != 0) {
+              if (a < 20)
+                  return (c(single, teens)[a])
+              else
+                  return (c(single[a %% 10], "en", tens[floor(a / 10)]))
+          }
+      }
+      numword.100 <- function(y) {
+          a <- (floor(y / 100) %% 100) %% 10
+          if (a == 1)
+              return ("honderd")
+          if (a > 1) 
+              return (c(single[a], "honderd"))
+      }
+      numword.1000 <- function(y) {
+          a <- (1000 * floor(y / 1000)) / 1000
+          if (a == 1)
+              return ("duizend ")
+          if (a > 0)
+              return (c(numword.100(a), numword.10(a), "duizend "))
+      }
+      numword<- paste(c(numword.1000(x), numword.100(x), numword.10(x)), collapse="")
+      return (trimws(numword))
+  }
+
+  antwoord <- nchar(gsub(" ", "", paste0(sapply(1:1000, numword.nl), collapse="")))
+  print(antwoord)
+#+END_EXAMPLE

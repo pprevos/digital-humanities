@@ -1,0 +1,178 @@
+#+title: Euler Problem 33: Digit Cancelling Fractions and Ford Circles
+#+date: 2018-07-09 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 33 takes us back to the world of fractions from our
+primary school days. This article discusses how to solve this problem
+using Farey sequences and how to visualise Ford Circles with the ggplot2
+package.
+
+Many kids hate and struggle learning about fractions, but once you
+master them, a new world of numbers opens up. Unfortunately, the
+proliferation of digital calculators has negated the use of fractions in
+favour of decimal expressions.
+[[https://lucidmanager.org/euler-problem-26/][Fractions]] are an
+aesthetic way to express numbers, without having to resort to ugly
+random sequences of decimals. This is why I prefer to use 22/7 as an
+[[https://lucidmanager.org/approximations-of-pi/][approximation of Pi]]
+over the ugly infinite series of decimals.
+
+This Numberphile video below explains fractions and Farey sequences. A
+Farey sequence contains all fractions between 0 and 1 with a maximum
+denominator. More formally, a
+[[https://en.wikipedia.org/wiki/Farey_sequence][Farey sequence]] of
+order /n/ is the sequence of completely reduced fractions between 0 and
+1. These fractions have denominators less than or equal to $latex n$,
+arranged in order of increasing size. For example, the Farey Sequence
+with order 3 is:
+
+$latex F_3 = \Big\{
+\frac{0}{1},\frac{1}{3},\frac{1}{2},\frac{2}{3},\frac{1}{1}\Big\} $
+
+Ford Circles are a fractal-esque way to visualise Farey sequences , but
+before we get to this, first solve Euler problem 33.
+
+{{< youtube "0hlvhQZIOQw" >}}
+
+Funny Fractions and Ford Circles by Numberphile.
+
+** Euler Problem 33 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-33-definition
+   :END:
+
+The fraction ^{49}/_{98} is a curious fraction, as an inexperienced
+mathematician in attempting to simplify it may incorrectly believe
+that ^{49}/_{98} = ^{4}/_{8}, which is correct, is obtained by
+cancelling the 9s. We shall consider fractions
+like ^{30}/_{50} = ^{3}/_{5}, to be trivial examples.
+
+There are precisely four nontrivial examples of this type of fraction,
+less than one in value, and containing two digits in the numerator and
+denominator. If the product of these four fractions is given in its
+lowest common terms, [[https://projecteuler.net/problem=33][find the
+value of the denominator]].
+
+** Proposed Solution in R
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solution-in-r
+   :END:
+
+To solve this problem, we create a pseudo-Farey sequence by generating
+all different fractions with two decimals in the numerator and
+denominator. The loop generates all combinations of denominators and
+numerators, excluding the trivial ones (multiples of 10 and 11). This
+solution converts the numbers to strings, strips any common duplicates,
+and tests the condition. The code concatenates vectors, which is not
+good practice. However, the loop is so short it does not matter much.
+
+You can view the code below or download it from my
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem033.R][GitHub
+page]].
+
+#+BEGIN_EXAMPLE
+  num <- vector()
+  den <- vector()
+  for (a in 11:99) {
+      for (b in (a + 1):99) {
+          trivial <- (a %% 10 == 0 | b && 10 == 0 | a %% 11 == 0 | b %% 11 == 0)
+          if (!trivial) {
+              i <- as.numeric(unlist(strsplit(as.character(a), "")))
+              j <- as.numeric(unlist(strsplit(as.character(b), "")))
+              digs <- c(i, j)
+              dup <- digs[duplicated(digs)]
+              digs <- digs[which(digs != dup)]
+              if (length(digs) == 2 & a/b == digs[1]/digs[2]) {
+                  num <- c(num, a)
+                  den <- c(den, b)
+                  }
+          }
+      }
+  }
+  paste(num, den, sep = "/")
+  answer <- prod(den) / prod(num)
+  print(answer)
+#+END_EXAMPLE
+
+** Farey Sequences and Ford Circles
+   :PROPERTIES:
+   :CUSTOM_ID: farey-sequences-and-ford-circles
+   :END:
+
+Next step is to generalise Euler problem 33 and write a function to
+generate Farey Sequences and visualise them using Ford Circles.
+
+The =farey= function generates a data table with the numerators (p) and
+denominators (q) of a Farey sequence. The function builds a list of all
+possible fractions for the solution space, excluding those with one as a
+Greatest Common Dominator, as defined by the =gcd= function.
+
+#+BEGIN_EXAMPLE
+  farey <- function(n) {
+      fseq <- list()
+      fseq[[1]] <- c(0, 1)
+      i <- 2
+      gcd <- function(a, b) { # Euclid's method
+          if (a == 0) return(b)
+          if (b == 0) return(a)
+          gcd(b, a %% b)
+      }
+      for (q in 2:n) {
+          for (p in 1:(q - 1)){
+              if (gcd(p, q) == 1) {
+                  fseq[[i]] <- c(p, q)
+                  i <- i + 1
+                  }
+          }
+      }
+      fseq[[i]] <- c(1, 1)
+      fseq <- as.data.frame(do.call(rbind, fseq))
+      names(fseq) <- c("p", "q")
+      fseq <- fseq[order(fseq$p / fseq$q), ]
+      return(fseq)
+  }
+#+END_EXAMPLE
+
+Standard ggplot2 cannot draw circles where the radius of the circles is
+related to the coordinate system. I tried to use the
+[[https://cran.r-project.org/web/packages/ggforce/][ggforce]] package to
+plot circles in ggplot2, but for some reason, I was not able to install
+this package on Ubuntu. As an alternative, I used a circle function
+sourced from
+[[https://stackoverflow.com/questions/6862742/draw-a-circle-with-ggplot2][StackOverflow]].
+This function is called in a for-loop to build the circles on top of the
+empty canvas.
+
+#+CAPTION: Farey Sequence and Ford Circles (n = 20).
+[[/images/blogs.dir/9/files/sites/9/2018/07/FordCircles-1024x614.jpg]]
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  lm_palette <- c("#008da1", "#005395", "#262e43", "#3b2758", "#865596", "#f26230")
+  ford_circles <- farey(20) %>%
+      mutate(x = p / q,
+             y = 1 / (2* q^2),
+             r = y,
+             c = lm_palette[(q - 1)%%6 + 1])
+
+  g_circle <- function(r, x, y, color = NA, fill = "black", ...) {
+      x <- x + r * cos(seq(0, pi, length.out = 100))
+      ymax <- y + r * sin(seq(0, pi, length.out = 100))
+      ymin <- y + r * sin(seq(0, -pi, length.out = 100))
+      annotate("ribbon", x = x, ymin = ymin, ymax = ymax,
+               color = color, fill = fill, ...)
+  }
+
+  p <- ggplot(ford_circles, aes(x, y))
+  for (i in 1:nrow(ford_circles)) {
+      p <- p + g_circle(ford_circles$r[i], ford_circles$x[i], ford_circles$y[i],
+                        fill = ford_circles$c[i])
+  }
+  p + xlim(c(0, 1)) + coord_fixed() + theme_void()
+#+END_EXAMPLE
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

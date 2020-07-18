@@ -1,0 +1,45 @@
+#+title: The Commandments of Data Science
+#+date: 2019-06-16 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Data-Science-Strategy
+#+draft: true
+
+** Garbage in = Garbage out
+   :PROPERTIES:
+   :CUSTOM_ID: garbage-in-garbage-out
+   :END:
+
+[[https://i2.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/06/gigo.jpg?fit=1024%2C512&ssl=1]]
+
+This rule existed from the early days of computational analysis.
+
+[[https://i1.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/06/gigo-r.jpg?fit=1024%2C512&ssl=1]]
+
+[[https://i1.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/06/gigo-python.jpg?fit=1024%2C512&ssl=1]]
+
+** 80% of Data Science is Data Cleaning
+   :PROPERTIES:
+   :CUSTOM_ID: of-data-science-is-data-cleaning
+   :END:
+
+[[https://i2.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/06/data-cleaning.jpg?fit=1024%2C512&ssl=1]]
+
+** Golden rule of data science ethics: "Don't be creepy"
+   :PROPERTIES:
+   :CUSTOM_ID: golden-rule-of-data-science-ethics-dont-be-creepy
+   :END:
+
+[[/images/blogs.dir/9/files/sites/9/2019/06/golden-rule-data-science-ethics-1024x512.jpg]]
+
+** 99% of problems don´t require machine learning
+   :PROPERTIES:
+   :CUSTOM_ID: of-problems-dont-require-machine-learning
+   :END:
+
+[[https://i1.wp.com/lucidmanager.org/wp-content/blogs.dir/9/files/sites/9/2019/06/trees-through-the-random-forest.jpg?fit=1024%2C512&ssl=1]]
+
+** All models are false, some are useful
+   :PROPERTIES:
+   :CUSTOM_ID: all-models-are-false-some-are-useful
+   :END:

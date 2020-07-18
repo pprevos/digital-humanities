@@ -1,0 +1,98 @@
+#+title: Generating Quadratic Primes: Euler Problem 27
+#+date: 2017-07-06 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Prime numbers are the engine of the Internet economy because they cannot
+be generated through an algorithm. This impossibility has not stopped
+mathematicians from trying to find formulas to generate prime numbers.
+Euler problem 27 deals with quadratic formulas that can be used to
+generate sets of prime numbers. I have already discussed this in the
+article about the [[https://lucidmanager.org/euler-problem-28/][Ulam
+Spiral]] in the next Euler Problem. This Numerphile video discusses
+quadratic primes.
+
+{{< youtube "3K-12i0jclM" >}}
+
+41 and more Ulam's Spiral.
+
+** Euler Problem 27 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-27-definition
+   :END:
+
+Euler discovered the remarkable quadratic formula:
+
+$latex n^2+n+41$
+
+It turns out that the formula will produce 40 primes for the consecutive
+integer values $latex 0 \leq n \leq 39$. However, when $latex n=40$,
+$latex 40^2+40+41=40(40+1)+41$ is divisible by 41, and certainly when
+$latex n=41 &s=2$, $latex 41^2+41+41$ is clearly divisible by $latex
+41$.
+
+The incredible formula $latex n^2-79n+1601$ was discovered, which
+produces 80 primes for the consecutive values $latex 0 \leq n \leq 79$.
+The product of the coefficients, -79 and 1601, is -126479.
+
+Considering quadratics of the form: $latex n^2+an+bn^2+an+b$, where
+$latex |a| < 1000$ and $latex |b| \leq 1000$, where $latex |n| $ is the
+modulus/absolute value of $latex n$, e.g. $latex |11|=11$ and $latex
+|-4|=4 $.
+
+[[https://projecteuler.net/problem=27][Find the product of the
+coefficients]], $latex a$ and $latex b$, for the quadratic expression
+that produces the maximum number of primes for consecutive values of
+$latex n$, starting with $latex n=0$.
+
+** Proposed Solution
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solution
+   :END:
+
+The only way to solve this problem is through brute force. We need to
+reduce the solution space to optimise it for speed (source:
+[[http://www.mathblog.dk/project-euler-27-quadratic-formula-primes-consecutive-values/][mathblog.dk]]).
+Because the outcome of the equation must be prime for $latex n = 0$,
+$latex b$ also has to be prime.
+
+We can use the prime sieve from
+[[https://lucidmanager.org/euler-problem-3/][Euler Problem 3]], which
+reduces it from 2000 to 168 options. When we insert $latex n = 1$, it
+follows that a has to be an even number. If $latex 1+a+b$ has to be
+prime and b has to be a prime number, then $latex a $can only be an odd
+number. However, when $latex b = 2$, $latex a$, also has to be even.
+
+** Euler Problem 27 code
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-27-code
+   :END:
+
+View the latest version of this code below or download it from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem027.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  seq.a <- seq(-999, 1001, 2) # a has to be odd
+  seq.b <- (esieve(1000)) # b has to be prime
+  max.count <- 0
+  for (a in seq.a) {
+      if (a == 2) 
+          seq.a <- seq(-1000, 1000, 2) # a has to be even
+      for (b in seq.b) {
+          n <- 0 # Find sequence of primes for a and b
+          while (is.prime(n^2 + a * n + b)) {
+              n <- n + 1
+          }
+          # Store maximum values
+          if (n > max.count) {
+              max.count <- n
+              max.a <- a
+              max.b <- b
+          }
+      }
+  }
+  answer <- max.a * max.b
+  print(answer)
+#+END_EXAMPLE

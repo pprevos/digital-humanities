@@ -1,0 +1,80 @@
+#+title: Euler Problem 7: 10,001st Prime
+#+date: 2017-01-12 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 7 asks us to generate ten thousand prime numbers.
+
+{{< youtube "WJ12DYBuazY" >}}
+
+** Euler Problem 7 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-7-definition
+   :END:
+
+By listing the first six prime numbers: 2, 3, 5, 7, 11, and 13, we can
+see that the 6^{th} prime is 13. What is the 1,0001^{st} prime number?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The =is.prime= function determines whether a number is a prime number by
+checking that it is not divisible by any prime number up to the square
+root of the number. The Sieve of used in
+[[https://lucidmanager.org/euler-problem-3/][Euler Problem 3]] generates
+the prime numbers. This problem can only be solved using brute force
+because [[https://en.wikipedia.org/wiki/Prime_gap][prime gaps]]
+(sequence [[https://oeis.org/A001223][A001223]] in the OEIS) do not
+follow a predictable pattern. You can download the latest version of
+this code from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem007.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  is.prime <- function(n) {
+      primes <- esieve(ceiling(sqrt(n)))
+      prod(n %% primes! = 0) == 1
+  }
+  i <- 2 # First Prime
+  n <- 1 # Start counter
+  while (n < 10001) { # Find 10001 prime numbers
+      i <- i + 1 # Next number
+      if(is.prime(i)) { # Test next number
+          n <- n + 1 # Increment counter
+          i <- i + 1 # Next prime is at least two away
+      }
+  }
+  answer <- i - 1
+#+END_EXAMPLE
+
+** Sexy Primes
+   :PROPERTIES:
+   :CUSTOM_ID: sexy-primes
+   :END:
+
+The largest prime gap for the first 10,001 primes is 72.
+[[https://en.wikipedia.org/wiki/Sexy_prime][Sexy primes]] with a gap of
+6 are the most common and there are 1270
+[[https://en.wikipedia.org/wiki/Twin_prime][twin primes]].
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  primes <- esieve(i)
+  p <- length(primes)
+  gaps <- data_frame(Gap = primes[2:p] - primes[1:(p - 1)], Sexy = Gap %% 6 == 0) %>%
+      group_by(Gap, Sexy) %>%
+      count()
+
+  ggplot(gaps, aes(Gap, n, fill = Sexy)) +
+      geom_col() +
+      scale_fill_manual(values = c( "#7391AB", "#A62102")) +
+      labs(title = "Frequency of prime gaps for the first 10,000 primes",
+          x = "Prime Gap",
+          y = "Frequency")
+          guide_legend(title = "Sexy Primes")
+#+END_EXAMPLE
+
+[[/images/blogs.dir/4/files/sites/4/2017/01/problem007-1024x1024.png]]

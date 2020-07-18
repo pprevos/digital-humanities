@@ -1,0 +1,237 @@
+#+title: Celebrate Halloween with Creepy Computer Games in R
+#+date: 2018-10-28 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: R-Games R-Language
+#+draft: true
+
+Halloween is upon us once more and who ever said that data science can't
+be scare. This article translates the /Gravedigger/ game from the 1983
+[[https://usborne.com/browse-books/features/computer-and-coding-books/][Creepy
+Computer Games]] book to celebrate Halloween. This article is part of my
+series on [[https://lucidmanager.org/tag/r-games/][gaming with the R
+language]].
+
+In the 1980s I spent my time writing code on my 8-bit ZX81 and Atari
+computers. I learnt everything I know about programming from copying and
+modifying printed code listings from books with computer games. The
+games in these books are mostly simple text-based games. The authors
+gave them enticing names, often imaginatively illustrated to visualise
+the virtual world they represent. A
+[[https://lucidmanager.org/pong/][line and a dot]] become a game of
+tennis, and a computer that was able to play
+[[https://lucidmanager.org/tic-tac-toe-war-games/][Tic Tac Toe]] seemed
+like your machine had come alive.
+
+Let's step into the creepy world of computer games as imagined by
+Usborne Publishing.
+
+#+CAPTION: Reynold, Colin and McCaig, Rob, Creepy Computer Games
+(Usborne, London).
+[[/images/blogs.dir/9/files/sites/9/2018/10/Creepy_Computer_Games-1024x856.jpg]]
+
+** Gravedigger
+   :PROPERTIES:
+   :CUSTOM_ID: gravedigger
+   :END:
+
+Alan Ramsey's /Gravedigger/ is a typical example of the games of the
+early days of home computing. You can download the original book for
+free from the
+[[https://drive.google.com/file/d/0Bxv0SsvibDMTRUl3SFRONGN0MFk/view][publisher
+'s Google drive]]. The /Gravedigger/ listing starts on page 10. The
+lyrical description of the game provides the instructions:
+
+#+BEGIN_QUOTE
+  It's dark and windy---not the kind of night to be lost in a graveyard,
+  but that's where you are. You have until midnight to find your way
+  out. Skeletons lurk in the shadows waiting to scare you to death
+  should you come to close. You can dig holes to help keep them away but
+  digging is tiring work and you cannot manage more than five in one
+  game.  You have to be careful not to fall down the holes you have dug.
+  Grave stones (marked =+=) and  the walls of the graveyard (marked =:=)
+  block your way. The holes you digs are marked =O=, you are =*= and the
+  skeletons are =X=. See if you can escape.
+#+END_QUOTE
+
+#+CAPTION: Gravedigger screenshot (Emacs ESS).
+[[/images/blogs.dir/9/files/sites/9/2018/10/gravedigger.png]]
+
+** The Gravedigger code
+   :PROPERTIES:
+   :CUSTOM_ID: the-gravedigger-code
+   :END:
+
+I translated the BASIC code as close to the original as possible. I
+changed some of the variable names because, in BASIC, single variables
+and vectors can have the same name and names of character vectors end in
+a $ character.
+
+The game is quite tricky, and I have only managed to escape the
+graveyard once. It looks like the likelihood of success very much
+depends on the random distribution of the graves. Perhaps we need some
+machine learning to optimise strategy.
+
+I leave it up to you to deconstruct the program and safely work your way
+through the graveyard.
+
+Happy Halloween!
+
+#+CAPTION: Partial page of the Gravedigger game in BASIC. The markings
+indicate different versions for various dialects of the BASIC language.
+[[/images/blogs.dir/9/files/sites/9/2018/10/graveyard-1024x614.jpg]]
+
+<<uagb-marketing-btn-511ba405-29c5-40b6-804c-fedc235140a1>>
+
+[[https://github.com/pprevos/RGames][]]
+
+****** Download code
+       :PROPERTIES:
+       :CUSTOM_ID: download-code
+       :CLASS: uagb-marketing-btn__title
+       :END:
+
+Read the code below or download it from GitHub.
+
+#+BEGIN_EXAMPLE
+  ## Creepy Computer Games
+  ## Reynold, Colin and McCaig, Rob, Creepy Computer Games (Usborne, London).
+  ## https://archive.org/details/Creepy_Computer_Games_1983_Usborne_Publishing/
+  ## Gravedigger by Alan Ramsey
+
+  ## Initiate board
+  A <- matrix(ncol = 20, nrow = 10)
+  A[, ] <- " "
+
+  ## Starting variables
+  W <- 0 # Move number
+  X <- 5 # Remaining holes
+  death <- 0 # Game over?
+
+  ## Initiate pieces
+  Y <- "*"
+  B <- "+"
+  C <- "O" 
+  D <- ":"
+  E <- "X"
+  Z <- " "
+
+  ## Draw board
+  ## Add borders
+  A[c(1, 10), ] <- D
+  A[, 1] <- D
+  A[1:8, 20] <- D
+  ## Add graves
+  for (i in 1:20){
+      A[floor(runif(1) * 7 + 2), floor(runif(1) * 15 + 3)] <- B
+  }
+
+  ## Starting positions
+  ## Player
+  M <- 2
+  N <- 2
+  A[N, M] <- Y
+  ## Skeletons
+  S <- c(4, 19, 3, 19, 2, 19)
+
+  ## Game play
+  repeat{    
+      ## Position skeletons
+      for (J in seq(1, 5, by = 2)) {
+          A[S[J], S[J + 1]] <- E
+      }
+      W <- W + 1 ## Move counter
+      if (W > 60) {
+          print("The clock's struck midnight")
+          print("Aghhhhh!!!!")
+          break
+      }
+      ## Print board
+      v <- paste(as.vector(t(A)), collapse = "")        
+      for (i in 1:10)
+          print(substr(v, (i - 1) * 20 + 1, (i - 1) * 20 + 20))
+      ## Enter move
+      A1 <- toupper(readline(paste0("Enter move ", W, " (You can go N, S, E or W): ")))
+      ## Move player
+      T <- N
+      U <- M
+      if (A1 == "N") {
+          T <- N - 1
+      }
+      if (A1 == "E") {
+          U <- M + 1
+      }
+      if (A1 == "S") {
+          T <- N + 1
+      }
+      if (A1 == "W") {
+          U <- M - 1
+      }
+      ## Collission detection
+      if (A[T, U] == D | A[T, U] == B) { # Edge or grave
+          print("That way's blocked")
+      }
+      if (A[T, U] == C) { # Hole
+          print("You've fallen into one of your own holes")
+          break
+      }
+      if (A[T, U] == E) { # Skeleton
+          death <- 1
+      }
+      if (T == 9 & U == 20) { # Escaped
+          print("You're free!")
+          print(paste0("Your performance rating is ",
+                      floor((60 - W) / 60 * (96 + X)), "%"))
+          break
+      }
+      if (death == 1) {
+          print("Urk! You've been scared to death by a skeleton.")
+          break
+      }
+      if (A[T, U] == Z) { # Player can move
+          ## Move player and dig hole
+          A [N, M] <- Z
+          if (X != 0) {
+              B1 <- toupper(readline("Would you like to dig a hole (Y or N): "))
+              if (B1 == "Y") {
+                  X <- X - 1
+                  A[N, M] <- C
+              }
+          }
+          N <- T
+          M <- U
+          A[T, U] <- Y
+          ## Move skeletons
+          for (J in seq(1, 5, by = 2)) {
+              ## Store skeleton position in temp variable
+              P <- S[J]
+              Q <- S[J + 1]
+              if (any(c(A[P + 1, Q], A[P - 1 , Q], A[P, Q - 1], A[P, Q + 1]) == Y)) {
+                  death <- 1
+              } else
+              {
+                  ## Move skeletons
+                  if (A1 == "S" & A[P + 1, Q] == Z){
+                      S[J] <- S[J] + 1 # Follow player
+                      A[P, Q] <- Z
+                  }
+                  if (A1 == "N" & A[P - 1, Q] == Z){
+                      S[J] <- S[J] - 1 # Follow player
+                      A[P, Q] <- Z
+                  }
+                  if (A1 == "E" & A[P, Q - 1] == Z & M < Q){
+                      S[J + 1] <- S[J + 1] - 1 # Move towards player
+                      A[P, Q] <- Z
+                  }
+                  if (A1 == "E" & A[P, Q + 1] == Z & M > Q) {
+                      S[J + 1] <- S[J + 1] + 1 # Reverse direction
+                      A[P, Q] <- Z
+                  }
+              }
+          }
+      }
+  }
+#+END_EXAMPLE
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

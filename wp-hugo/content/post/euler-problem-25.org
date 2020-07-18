@@ -1,0 +1,103 @@
+#+title: Fibonacci number with 1000 digits, Euler Problem 25
+#+date: 2017-06-22 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 25 takes us back to the
+[[https://lucidmanager.org/euler-problem-2/][Fibonacci sequence]] and
+the problems related to working with very large integers. The Fibonacci
+sequence follows a simple mathematical rule but it can create things of
+great beauty. This pattern occurs quite often in nature, like to
+nautilus shell shown in the image. This article shows how to find the
+first Fibonacci number with one thousand digits.
+
+You view the code to solve this problem below, or download the latest
+version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem025.R][GitHub]].
+
+** Large Integers in R
+   :PROPERTIES:
+   :CUSTOM_ID: large-integers-in-r
+   :END:
+
+By default, numbers with more than 7 digits are shown in scientific
+notation in R, which reduces the accuracy of the calculation. You can
+change the precision of large integers with the /options/ function but R
+struggles with integers with more than 22 digits. This example
+illustrates this issue:
+
+#+BEGIN_EXAMPLE
+  > factorial(24)
+  [1] 6.204484e+23
+
+  > options(digits = 22)
+  > factorial(24)
+  [1] 620448401733239409999872
+#+END_EXAMPLE
+
+Finding a number of 1000 digits is a problem in R with using a special
+function or package. This article explains how to solve this problem
+using the [[https://cran.r-project.org/web/packages/gmp/index.html][GMP
+package]] and in base R code.
+
+** Euler Problem 25 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-25-definition
+   :END:
+
+The Fibonacci sequence is defined by a recurrence relation:
+
+$latex F_n = F_{n-1} + F_{n-2} $, where $latex F_1 = 1$ and $latex F_2 =
+1$. The 12^{th} term, $latex F_{12}$, is the first term to contain three
+digits.
+
+What is the index of the [[https://projecteuler.net/problem=25][first
+term in the Fibonacci sequence to contain 1000 digits]]?
+
+** Proposed Solutions
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solutions
+   :END:
+
+The first solution uses the GMP library to manage very large integers.
+This package implements the the [[https://gmplib.org/][GNU Multiple
+Precision Arithmetic Library]] for working with huge numbers. This
+package also contains a function to generate Fibonacci numbers. This
+solution cycles through the Fibonacci sequence until it finds a number
+with 1000 digits.
+
+#+BEGIN_EXAMPLE
+  library(gmp) # GNU Multiple Precision Arithmetic Library
+  n <- 1
+  fib <- 1
+  while (nchar(as.character(fib)) <= 1000) {
+      fib <- fibnum(n) # Determine next Fibonacci number
+      n <- n + 1
+  }
+  answer <- n
+  print(answer)
+#+END_EXAMPLE
+
+This is a very fast solution but my aim is to solve the first 100
+Project Euler problems using only base-R code. The =big.add= function I
+developed to solve [[https://lucidmanager.org/euler-problem-13/][Euler
+Problem 13]] uses only basic R to add large numbers. This code to solve
+Euler Problem 25 is much slower than the GMP library but it was fun to
+develop.
+
+#+BEGIN_EXAMPLE
+  fib <- 1 # First Fibonaci number
+  cur <- 1 # Current number in sequence
+  pre <- 1 # Previous number in sequence
+  index <- 2
+  while (nchar(fib) < 1000) {
+      fib <- big.add(cur, pre) # Determine next Fibonacci number
+      pre <- cur
+      cur <- fib
+      index <- index + 1
+  }
+  answer <- index
+  print(answer)
+#+END_EXAMPLE

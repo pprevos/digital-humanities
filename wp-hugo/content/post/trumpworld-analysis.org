@@ -1,0 +1,127 @@
+#+title: Trumpworld Analysis: Ownership Relations in his Business Network
+#+date: 2017-01-23 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Network-Analysis R-Language
+#+draft: true
+
+You do not need a machine learning algorithm to predict that the
+presidency of Donald Trump will be controversial. Judging by his pointed
+language in the campaign, we can rest assured that Trump will break many
+conventions of world politics. One of the most discussed aspects of his
+reign is the massive potential for conflicts of interest. Trump's
+complex business empire is entangled with national and international
+politics. Buzzfeed has mapped many of the relationships
+between businesses and people in what they have dubbed
+[[https://www.buzzfeed.com/johntemplon/help-us-map-trumpworld][Trumpworld]].
+They provided the data to enable citizens data science into the
+wheelings and dealings of Donald J. Trump. The
+[[https://docs.google.com/spreadsheets/d/1Z5Vo5pbvxKJ5XpfALZXvCzW26Cl4we3OaN73K9Ae5Ss/edit][raw
+data set]] consists of three subsets of connections between:
+
+- Organisations
+- People
+- People and organisations
+
+This article presents a quick analysis of the data using the R language
+for statistical computing and the iGraph package for analysing networks.
+View download this code and associated files from
+[[https://github.com/pprevos/r.prevos.net/tree/master/Miscellaneous/TrumpWorld][GitHub]].
+
+** Trumpworld Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: trumpworld-analysis
+   :END:
+
+This article analyses the connections between organisations using the
+mighty [[http://igraph.org/r/][igraph package]].The package implements
+social network analysis for the R language which can be used for many
+purposes, such as analysing
+[[https://lucidmanager.org/analyse-enron-corpus/][email traffic]] or
+[[https://lucidmanager.org/pacific-island-hopping/][flight paths]].
+
+The code snippet below reads the data and converts it to a graph that
+can be examined using social network analysis techniques. I have saved
+the raw data available on Google Sheets file as CSV files. This data is
+filtered to contain only ownership relationships and the names of the
+organisations.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(igraph)
+  trumpworld.org <- read_csv("TrumpWorld Data org-org.csv") %>%
+      filter(Connection == "Ownership") %>%
+      select(OrgA = "Organization A", OrgB = "Organization B")
+
+  org.ownership <- trumpworld.org %>%
+      as.matrix %>%
+      graph.edgelist()
+
+  par(mar=rep(0,4))
+  plot(org.ownership,
+  layout = layout.fruchterman.reingold,
+      vertex.label = NA,
+      vertex.size = 2,
+      edge.arrow.size = .1
+  )
+#+END_EXAMPLE
+
+#+CAPTION: Trumpworld Analysis: Ownership Relations in his Business
+Network
+[[/images/blogs.dir/4/files/sites/4/2017/01/trumpworld-org1.png]]
+
+** Network Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: network-analysis
+   :END:
+
+This network contains 309 ownership relationships between 322 distinct
+organisations. When we plot the data, we see that most connections are
+dyadic connections between two firms. The plot is organised with the
+[[https://en.wikipedia.org/wiki/Force-directed_graph_drawing][Fruchterman-Reingold]]
+algorithm to improve its clarity. We can also see a large cluster in the
+centre. The names have been removed for clarity. Our excursion into
+Trumpland continues by zooming in on the subnetwork. The second code
+section excises this connected subnetwork so we can analyse it in more
+detail.
+
+** Digging Deeper
+   :PROPERTIES:
+   :CUSTOM_ID: digging-deeper
+   :END:
+
+The node with the highest
+[[https://en.wikipedia.org/wiki/Degree_(graph_theory)][degree]] identifies
+the business with the most holdings. This analysis shows that DJT
+Holdings LLC owns 33 other organisations. These organisations hold other
+organisations. We can now use the cluster function to investigate this
+subnetwork using the decompose function, which splits the network into
+its unconnected subnetworks. The code then selects and visualises the
+largest of the subnetworks.
+
+This Trumpworld analysis shows that the ownership network is a
+[[https://en.wikipedia.org/wiki/Star_(graph_theory)][star network]]. DJT
+Holdings LLC centrally controls all organisations. Perhaps this graph
+visualises the management style of the soon to be president Trump. Trump
+centrally controls his empire, which is typical of a family business.
+Does this chart visualise Trump's leadership style? Is the star network
+an expression of his lack of trust and thus desire to oversee everything
+directly?
+
+#+BEGIN_EXAMPLE
+  which.max(degree(org.ownership))
+
+  org.ownership.d <- decompose(org.ownership)
+
+  largest <- which.max(sapply(org.ownership.d, diameter))
+
+  plot(org.ownership.d[[largest]],
+       layout=layout.fruchterman.reingold,
+       vertex.label.cex = .5,
+       vertex.size = 5,
+      edge.arrow.size = .1
+  )
+#+END_EXAMPLE
+
+#+CAPTION: Trumpworld holdings subset. Click to zoom.
+[[/images/blogs.dir/4/files/sites/4/2017/01/TrumplandHoldings-1024x897.png]]

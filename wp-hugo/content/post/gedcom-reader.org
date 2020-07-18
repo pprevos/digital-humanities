@@ -1,0 +1,232 @@
+#+title: GEDCOM Reader for the R Language: Analysing Family History
+#+date: 2019-07-20 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Genealogy R-Language
+#+draft: true
+
+Understanding who you are is strongly related to understanding your
+family history. Discovering ancestors is now a popular hobby, as many
+archives are available on the internet. The GEDCOM format provides a
+standardised way to store information about ancestors. This article
+shows how to develop a GEDCOM reader using the R language.
+
+*** Download the Code
+    :PROPERTIES:
+    :CUSTOM_ID: download-the-code
+    :CLASS: uagb-cta__title
+    :END:
+
+The text in this article explains the basic principles to write a GEDCOM
+reader. You can download the latest version from
+[[https://github.com/pprevos/Genealogy][GitHub]].
+
+Download
+
+** The GEDCOM format
+   :PROPERTIES:
+   :CUSTOM_ID: the-gedcom-format
+   :END:
+
+The GEDCOM format is not an ideal way to store information, but it has
+become the de-facto standard for family history. This format includes
+metadata and two sets of data. The file contains a list of the
+individuals, and it lists the families to which they belong.
+
+The basic principle is that each line has a level, indicated by the
+first digit. At level zero, we find metadata and the individuals and
+their family. At level one, we see the various types of data, such as
+births, deaths and marriages. The deeper levels provide the data for
+these events.
+
+[[http://heiner-eichmann.de/gedcom/gedcom.htm][Heiner Eichmann]]
+maintains a website that explains the format and provides some examples
+of files to help you understand the syntax.
+
+The GEDCOM format is not only old in the way it stores data, but it is
+also limited in the types of human relationships. These files only store
+genetic relationships between people and assume that these relationships
+are marriages between a wife and a husband. Human relationships are,
+however, a lot more complicated than the genetic relationships between
+children and their parents, grandparents and ancestors.
+
+These issues aside, all genealogical software can export a file to
+GEDCOM. The next section shows how to create a basic GEDCOM reader using
+the [[https://stringr.tidyverse.org/][stringr]],
+[[https://tibble.tidyverse.org/][tibble]] and
+[[https://dplyr.tidyverse.org/][dplyr]] packages from the
+[[https://tidyverse.org/][Tidyverse]].
+
+** GEDCOM Reader
+   :PROPERTIES:
+   :CUSTOM_ID: gedcom-reader
+   :END:
+
+The =read.gedcom()= function takes a GEDCOM file as input and delivers a
+data frame (tibble) with basic information:
+
+- ID
+- Full name
+- Gender
+- Birthdate and place
+- Father
+- Mother
+- Death date and place
+
+This code only can be easily expanded to include further fields by
+adding lines in the while-loops and including the fields in the data
+frame.
+
+The first lines read the file and setup the data frame. The =extract()=
+function extracts an individual's ID from a line in the file. The for
+loop runs through each line of the GEDCOM file. When the start of a new
+individual is detected, the GEDCOM reader collects the relevant
+information.
+
+Births and christenings are considered equal to simplify the data. In
+older data, we often only know one or the other. The function looks for
+the start of a family. It extracts the husband and wife and assigns
+these as parents to each of the children. The last section cleans the
+data and returns the result.
+
+#+BEGIN_EXAMPLE
+  ## Read GEDCOM file
+
+  ## The Devil is in the Data
+  ## lucidmanager.org/data-science
+  ## Dr Peter Prevos
+
+  read.gedcom <- function(gedcom.loc) {
+      require(stringr)
+      require(tibble)
+      require(dplyr)
+
+      gedcom <- str_squish(readLines(gedcom.loc))
+      idv <- sum(grepl("^0.*INDI$", gedcom))
+      fam <- sum(grepl("^0.*FAM$", gedcom))
+      cat(paste("Individuals: ", idv, "\n"))
+      cat(paste("Families: ", fam, "\n"))
+      family <- tibble(id = NA,
+                       Full_Name = NA,
+                       Gender = NA,
+                       Birth_Date = NA,
+                       Birth_Place = NA,
+                       Father_id = NA,
+                       Mother_id = NA,
+                       Death_Date = NA,
+                       Death_Place = NA)
+      ## Extract data
+      extract <- function(line, type) {
+          str_trim(str_sub(line, str_locate(line, type)[2] + 1))
+      }
+      id <- 0
+      for (l in 1:length(gedcom)) {
+          if (str_detect(gedcom[l], "^0") & str_detect(gedcom[l], "INDI$")) {
+              id <- id + 1
+              family[id, "id"] <- unlist(str_split(gedcom[l], "@"))[2]
+              l <- l + 1
+              while(!str_detect(gedcom[l], "^0")) {
+                  if (grepl("NAME", gedcom[l]))
+                      family[id, "Full_Name"] <- extract(gedcom[l], "NAME")
+                  if (grepl("SEX", gedcom[l]))
+                      family[id, "Gender"] <- extract(gedcom[l], "SEX")
+                  l <- l + 1
+                  if (grepl("BIRT|CHR", gedcom[l])) {
+                      l <- l + 1
+                      while (!str_detect(gedcom[l], "^1")) {
+                          if (grepl("DATE", gedcom[l]))
+                              family[id, "Birth_Date"] <- extract(gedcom[l], "DATE")
+                          if (grepl("PLAC", gedcom[l]))
+                              family[id, "Birth_Place"] <- extract(gedcom[l], "PLAC")
+                          l <- l + 1
+                      }
+                  }
+                  if (grepl("DEAT|BURI", gedcom[l])) {
+                      l <- l + 1
+                      while (!str_detect(gedcom[l], "^1")) {
+                          if (grepl("DATE", gedcom[l]))
+                              family[id, "Death_Date"] <- extract(gedcom[l], "DATE")
+                          if (grepl("PLAC", gedcom[l]))
+                              family[id, "Death_Place"] <- extract(gedcom[l], "PLAC")
+                          l <- l + 1
+                      }
+                  }
+              }
+          }
+          if (str_detect(gedcom[l], "^0") & str_detect(gedcom[l], "FAM")) {
+              l <- l + 1
+              while(!str_detect(gedcom[l], "^0")) {
+                  if (grepl("HUSB", gedcom[l]))
+                      husband <- unlist(str_split(gedcom[l], "@"))[2]
+                  if (grepl("WIFE", gedcom[l]))
+                      wife <- unlist(str_split(gedcom[l], "@"))[2]
+                  if (grepl("CHIL", gedcom[l])) {
+                      child <- which(family$id == unlist(str_split(gedcom[l], "@"))[2])
+                      family[child, "Father_id"] <- husband
+                      family[child, "Mother_id"] <- wife
+                  }
+                  l <- l + 1
+              }
+          }
+      }
+      family %>%
+          mutate(Full_Name = gsub("/", "", str_trim(Full_Name)),
+                 Birth_Date = as.Date(family$Birth_Date, format = "%d %b %Y"),
+                 Death_Date = as.Date(family$Death_Date, format = "%d %b %Y")) %>%
+          return()
+  }
+#+END_EXAMPLE
+
+** Analysing the data
+   :PROPERTIES:
+   :CUSTOM_ID: analysing-the-data
+   :END:
+
+There are many websites with GEDCOM files of family histories of famous
+and not so famous people. The
+[[https://webtreeprint.com/tp_famous_gedcoms.php][Famous GEDCOMs]]
+website has a few useful examples to test the GEDCOM reader.
+
+Once the data is in a data frame, you can analyse it any way you please.
+The code below downloads a file with the presidents of the US, with
+their ancestors and descendants. The =alive()= function filters people
+who are alive at a certain date. For people without birth date, it sets
+a maximum age of 100 years.
+
+The histogram shows the distribution of ages at time of death of all the
+people in the presidents file.
+
+These are just some random examples of how to analyse family history
+data with this GEDCOM reader. The next article will explain how to plot
+a population pyramid using this data. A future article will discuss how
+to visualise the structure of family history.
+
+#+CAPTION: Birth years of people of in the Presidents file
+[[/images/blogs.dir/9/files/sites/9/2019/07/years-1024x1024.png]]
+
+#+BEGIN_EXAMPLE
+  ## Basic family history statistics
+  library(tidyverse)
+  library(lubridate)
+  source("read.gedcom.R")
+  presidents <- read.gedcom("https://webtreeprint.com/tp_downloader.php?path=famous_gedcoms/pres.ged")
+
+  filter(presidents, grepl("Jefferson", Full_Name))
+
+  mutate(presidents, Year = year(Birth_Date)) %>%
+      ggplot(aes(Year)) +
+      geom_histogram(binwidth = 10, fill = "#6A6A9D", col = "white") +
+      labs(title = "Birth years in the presidents file")
+
+  alive <- function(population, census_date){
+      max_date <- census_date + 100 * 365.25
+      filter(people, (is.na(Birth_Date) & (Death_Date <= max_date &
+                                           Death_Date >= census_date)) |
+                     (Birth_Date <= census_date & Death_Date >= census_date)) %>%
+          arrange(Birth_Date) %>%
+          mutate(Age = as.numeric(census_date - Birth_Date) / 365.25) %>%
+          return()
+  }
+
+  alive(presidents, as.Date("1840-03-07"))
+#+END_EXAMPLE

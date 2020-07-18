@@ -1,0 +1,165 @@
+#+title: Percentile Calculations in Water Quality Regulations
+#+date: 2017-02-10 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics R-Language
+#+draft: true
+
+Percentile calculations can be more tricky than at first meets the
+eye. A
+[[https://en.wikipedia.org/wiki/Percentile][percentile]] indicates the
+value below which a percentage of observations fall. Some percentiles
+have special names, such as the
+[[https://en.wikipedia.org/wiki/Quartile][quartile]] or the
+[[https://en.wikipedia.org/wiki/Decile][decile]], both of which are
+[[https://en.wikipedia.org/wiki/Quantile][quantiles]]. This deceivingly
+simple definition hides the various ways to determine this number.
+Unfortunately, there is
+[[https://www.amherst.edu/media/view/129116/original/Sample+Quantiles.pdf][no
+standard definition for percentiles]], so which method do you use?
+
+The
+[[http://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html][quantile]]
+function in R generates sample percentiles corresponding to the given
+probabilities. By default, the quantile function provides the quartiles
+and the minimum and maximum values. The code snippet below generates
+semi-random data, plots the histogram and visualises the third quartile.
+
+#+BEGIN_EXAMPLE
+  set.seed(1969)
+  test.data <- rnorm(n = 10000, mean = 100, sd = 15)
+  library(ggplot2)
+  ggplot(as.data.frame(test.data), aes(test.data)) +
+      geom_histogram(binwidth = 1, aes(y = ..density..), fill = "dodgerblue") +
+      geom_line(stat = "function", fun = dnorm, args = list(mean = 100, sd = 15), colour = "red", size = 1) +
+      geom_area(stat = "function", fun = dnorm, args = list(mean = 100, sd = 15),
+      colour = "red", fill = "red", alpha = 0.5, xlim = quantile(test.data, c(0.5, 0.75))) +
+      theme(text = element_text(size = 16))
+#+END_EXAMPLE
+
+#+CAPTION: Percentile Calculations.
+[[/images/blogs.dir/4/files/sites/4/2017/02/percentiles.png]]
+
+The quantile default function and the 95^{th} percentile give the
+following results:
+
+#+BEGIN_EXAMPLE
+  quantile(test.data)
+  0% 25% 50% 75% 100%
+  39.91964 89.68041 100.16437 110.01910 153.50195
+
+  quantile(test.data, probs=0.95)
+  95%
+  124.7775
+#+END_EXAMPLE
+
+** Methods of percentile calculation
+   :PROPERTIES:
+   :CUSTOM_ID: methods-of-percentile-calculation
+   :END:
+
+The quantile function in R provides for nine different ways to calculate
+percentiles. Each of these options uses a different method to
+interpolate between observed values. I will not discuss the mathematical
+nuances between these methods.
+[[https://www.amherst.edu/media/view/129116/original/Sample+Quantiles.pdf][Hyndman
+and Fan]] (1996) provide a detailed overview of these methods. The
+differences between the nine available methods only matter in skewed
+distributions, such as water quality data. For the normal distribution
+simulated above the outcome for all methods is exactly the same, as
+illustrated by the following code.
+
+#+BEGIN_EXAMPLE
+  sapply(1:9, function(m) quantile(test.data, 0.95, type = m))
+
+  95% 95% 95% 95% 95% 95% 95% 95% 95%
+  124.7775 124.7775 124.7775 124.7775 124.7775 124.7775 124.7775 124.7775 124.7775
+#+END_EXAMPLE
+
+** Percentile calculations in water quality
+   :PROPERTIES:
+   :CUSTOM_ID: percentile-calculations-in-water-quality
+   :END:
+
+The
+[[https://nhmrc.gov.au/about-us/publications/australian-drinking-water-guidelines][Australian
+Drinking Water Quality Guidelines]] (November 2016) specify that: "based
+on aesthetic considerations, the turbidity should not exceed 5 NTU at
+the consumer's tap". The Victorian Safe Drinking Water Regulations
+(2015) relax this requirement and require that:
+
+#+BEGIN_QUOTE
+  "The 95^{th} percentile of results for samples in any 12 month period
+  must be less than or equal to 5.0 NTU."
+#+END_QUOTE
+
+The Victorian regulators
+[[https://www2.health.vic.gov.au/Api/downloadmedia/%7BA1F6D255-D5C7-4B7E-AAE5-8B7451EDE81A%7D][also specify ]]that
+the percentile should be calculated with the /Weibull Method/. This
+requirement raises two questions: What is the Weibull method? How do you
+implement this requirement in R?
+
+The term Weibull Method is a bit confusing as this is not a name used by
+statisticians. In Hyndman & Fan (1996), this method has the less poetic
+name $latex \hat{Q}_8(p)$.
+[[https://en.wikipedia.org/wiki/Waloddi_Weibull][Waloddi Weibull]], a
+Swedish engineer famous for his distribution, was one of the first to
+describe this method. Only the regulator in Victoria uses that name,
+which is based on [[http://amzn.to/2k8shr8][McBride (2005)]]. This
+theoretical interlude aside, how can we practically apply this to water
+quality data? In case you are interested in how the Weibull method
+works, the =weibull.quantile= function shown below calculates a
+quantile /p/ for a vector /x/ using this method. This function gives the
+same result as =quantile(x, p, type = 6)=.
+
+#+BEGIN_EXAMPLE
+  weibull.quantile <- function(x, p) {
+      # Order Samples from large to small
+      x <- x[order(x, decreasing = FALSE)]
+      # Determine ranking of percentile according to Weibull (1939)
+      r <- p * (length(x) + 1)
+      # Linear interpolation
+      rfrac <- (r - floor(r))
+      return((1 - rfrac) * x[floor(r)] + rfrac * x[floor(r) + 1])
+  }
+#+END_EXAMPLE
+
+** Turbidity Data Example
+   :PROPERTIES:
+   :CUSTOM_ID: turbidity-data-example
+   :END:
+
+Turbidity data is not normally distributed as it is always larger than
+zero. In this example, the turbidity results for the year 2016 for the
+water system in [[https://en.wikipedia.org/wiki/Tarnagulla][Tarnagulla]]
+are used to illustrate the percentile calculations. The range of weekly
+turbidity measurements is between 0.,05 NTU and 0.8 NTU, well below the
+aesthetic limits.
+
+#+CAPTION: Turbidity at customer tap in the Tarnagulla system in 2016
+(n=53).
+[[/images/blogs.dir/4/files/sites/4/2017/02/turbidity.png]]
+
+When we calculate the percentiles for all nine methods available in the
+base-R function we see that the so-called Weibull method generally
+provides the most conservative result.
+
+[table id=1 /]
+
+The following code snippet created the graph and the table:
+
+#+BEGIN_EXAMPLE
+  ggplot(turbidity, aes(Result)) +
+      geom_histogram(binwidth = .05, fill = "dodgerblue", aes(y = ..density..)) +
+      facet_wrap(~Zone) +
+      theme(text = element_text(size = 16))
+
+  tapply(turbidity$Result, turbidity$Zone,
+         function(x) sapply(1:9, function(m) quantile(x, 0.95, type = m)))
+#+END_EXAMPLE
+
+You can download the latest version of the code from
+[[https://github.com/pprevos/hydroinformatics/blob/master/WaterQuality/percentiles.R][GitHub]].
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

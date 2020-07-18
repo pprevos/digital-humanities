@@ -1,0 +1,99 @@
+#+title: Euler Problem 21: Amicable Numbers
+#+date: 2017-05-18 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 21 takes us to the realm of
+[[https://en.wikipedia.org/wiki/Amicable_numbers][amicable numbers]].
+The [[https://oeis.org/A259180][A259180]] sequence in the OEIS lists all
+amicable, or friendly numbers. These are the most romantic numbers in
+all of maths.
+
+A related concept is
+a [[https://en.wikipedia.org/wiki/Perfect_number][perfect number]],
+which is a number that equals the sum of its proper divisors.
+Mathematicians have also defined
+[[https://en.wikipedia.org/wiki/Sociable_number][sociable
+numbers]] and [[https://en.wikipedia.org/wiki/Betrothed_numbers][betrothed numbers]]
+which are similar to amicable numbers. But perhaps these are for another
+Euler problem.
+[[https://lucidmanager.org/euler-problem-23-non-abundant-sums/][Euler
+Problem 23]] is about finding abundant numbers,which are numbers for
+which the sum of its proper divisors is greater than the number itself.
+
+Amicable numbers were known to the
+[[https://lucidmanager.org/euler-problem-9/][Pythagoreans]], who
+credited them with many mystical properties. Before we had access to
+computers, finding amicable numbers was a task that required a lot of
+patience. No algorithm can systematically generate all amicable numbers,
+and until 1946 only 390 pairs were known. Medieval Muslim mathematicians
+developed several formulas to create amicable numbers, but the only way
+to be complete is using brute force.
+
+{{< youtube "fUSZBVYZdKY" >}}
+
+220 and 284 (Amiable Numbers) - Numberphile.
+
+** Euler Problem 21 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-21-definition
+   :END:
+
+Let $latex d(n)$ be defined as the sum of proper divisors of n (numbers
+less than $latex n$ which divide evenly into n). If $latex d(a) = b$ and
+$latex d(b) = a$, where $latex a \neq b$, then $latex a$ and $latex b$
+are an amicable pair and each of $latex a$ and $latex b$ are called
+amicable numbers.
+
+For example, the proper divisors of 220 are 1, 2, 4, 5, 10, 11, 20, 22,
+44, 55 and 110; therefore $latex d(220) = 284$. The proper divisors of
+284 are 1, 2, 4, 71 and 142; so, $latex d(284) = 220$.
+
+[[https://projecteuler.net/problem=21][Evaluate the sum]] of all the
+amicable numbers under 10000.
+
+* Solution
+  :PROPERTIES:
+  :CUSTOM_ID: solution
+  :END:
+
+The first part of the code provides for a function to list all proper
+divisors for a given integer /x/. The loop determines the divisors for
+the numbers 220 to 10,000, calculates their sum and then checks if these
+numbers are amicable. When the code finds an amicable number, the
+counter jumps to the sum of the divisors to check for the next one. You
+can view the code below or download the latest version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem021.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  proper.divisors <- function(x) {
+      divisors <- vector()
+      d <- 1
+      for (i in 1:floor(sqrt(x))) {
+          if (x %% i == 0) {
+              divisors[d] <- i
+              if (i != x/i) {
+                  d <- d
+                  divisors[d] <- x / i
+              }
+          d <- d + 1
+          }
+      }
+  return(divisors)
+  }
+
+  answer <- 0
+  n <- 220
+  while (n <= 10000) {
+      div.sum <- sum(proper.divisors(n)) - n
+      if (n == sum(proper.divisors(div.sum)) - div.sum & n != div.sum) {
+          answer <- answer + n + div.sum
+          print(paste0("(", n, ",", div.sum, ")"))
+          n <- div.sum
+      }
+      n <- n + 1
+  }
+  print(answer)
+#+END_EXAMPLE

@@ -1,0 +1,86 @@
+#+title: The Travelling Salesman Problem: Planning Your Holiday in R
+#+date: 2020-02-29 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: R-Language
+#+draft: true
+
+We are planning a road trip trough the south-western united states,
+starting and ending in Las Vegas. We have chosen some places we like to
+see: Grand Canyon, Extraterrestial Highway, Mesa Verde, Hoover Dam and
+Navajo country. However, the problem is: what is the shortest route to
+visit all these places? This problem is an example of the Travelling
+Salesman Problem which seeks the shortest route between all cities in a
+list and returning to the original location.
+
+This article contains the R code to
+
+[[#][]]
+
+****** Download the code from GitHub
+       :PROPERTIES:
+       :CUSTOM_ID: download-the-code-from-github
+       :CLASS: uagb-marketing-btn__title
+       :END:
+
+Get access to Premium Features for FREE for a year!
+
+** Travelling Salesman Problem
+   :PROPERTIES:
+   :CUSTOM_ID: travelling-salesman-problem
+   :END:
+
+The Travelling Salesman Problem, or more gender-neutral, The Travelling
+Salesperson Problem, is a so-called NP-Hard problem. Computer scientists
+classify algorithms by the number of steps it would take to solve the
+problem. The issue with this problem is that there is no formula to find
+the shortest route. The only way to find the shortest route is to try
+all combinations. This means that you need $latex n!/n $ steps to find
+the shortest circular route. This works fine for a few places, like my
+road trip, but it becomes almost impossible when the number of cities
+increases. For example, visiting all European 44 capital cities,
+starting in Amsterdam has $latex 6\times10^{52}$ possible routes.
+Mathematicians have developed several algorithms that need fewer steps
+to find an optimised solution. However, none of these algorithms will
+always find the actual shortest route.
+
+** American Road Trip
+   :PROPERTIES:
+   :CUSTOM_ID: american-road-trip
+   :END:
+
+This code uses a series of libraries, using
+[[https://tidyverse.org/][Tidyverse]] principles. The ggmap package
+provides the interface to Google Maps to obtain travel distances. To use
+the Google Maps API, you will need a key. A
+[[https://lucidmanager.org/geocoding-with-ggmap/][previous article]] on
+this blog contains instructions on how to obtain one.
+
+The first part of the code defines the cities on the road trip and finds
+the distance between each location. If the road trip contains $latex n$
+places, then there are $latex \frac{1}{2} n (1 + (n-1))$ trips. The
+first code section queries Google Maps to find the distance of each of
+the routes.
+
+#+BEGIN_EXAMPLE
+#+END_EXAMPLE
+
+In the next step, we need to string these trips together to construct
+all possible road trips. Because the trip has fewer than ten places, we
+can first try a brute-force solution to try all possible combinations.
+In principle, there are $latex n! $ possible solutions, but we can
+reduce the solution space by only using the trips that start with the
+first town, so we have $latex n!/n$ possible solutions. For our road
+trip with seven locations, that results in 720 possible routes.
+
+The first code block generates all permutations, using the gtools
+package, removes trips that don't start in Las Vegas and add a column to
+return to Vegas. The next matrix will contain all the distances between
+the locations of the trips. The second block of code loops through the
+permutations and finds the distance between each combination of
+locations from the distance matrix.
+
+#+BEGIN_EXAMPLE
+#+END_EXAMPLE
+
+The last step is to find the shortest route and visualise the result.

@@ -1,0 +1,237 @@
+#+title: Factor Analysis in R with the Psych Package: Measuring Consumer Involvement
+#+date: 2019-01-19 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics Marketing R-Language
+#+draft: true
+
+The first step for anyone who wants to promote or sell something is to
+understand the psychology of potential customers. Getting into the minds
+of consumers is often problematic because measuring psychological traits
+is a complex task. Consumer involvement is a measure of the attitude
+people have towards a product or service. This article introduces the
+concept of consumer involvement. An example using data from tap water
+consumers illustrates the theory. This article analyses the data
+collected from these consumers with factor analysis in R, using the
+[[https://personality-project.org/r/][psych package]].
+
+The most common method to measure psychological traits is to ask people
+a battery of questions. Analysing this data is complicated because it is
+difficult to determine how the survey responses relate to the software
+of the mind. While the answers given by survey respondents are the
+directly measured variables, we like to know the hidden (latent) states
+in their mind. Factor Analysis is a technique identifies latent
+variables within a responses set of data, such as a customer survey.
+
+The basic principle of measuring consumer attitudes is that their state
+of mind causes them to respond in a certain way. Factor analysis
+reverses this causality by analysing patterns in the responses that are
+indicative of the consumer's state of mind. Using a computing analogy,
+factor analysis is a technique to reverse-engineer the source code by
+analysing the input and output.
+
+** What is Consumer Involvement?
+   :PROPERTIES:
+   :CUSTOM_ID: what-is-consumer-involvement
+   :END:
+
+Involvement is a marketing metric that describes the relevance of a
+product or service in somebody's life.
+[[http://www.sfu.ca/~zaichkow/research.html][Judy Zaichkowsky]] defines
+consumer involvement formally as “a person's perceived relevance of the
+object based on inherent needs, values, and interests”. People who own a
+car will most likely be highly involved with purchasing and driving the
+vehicle due to the money involved and the social role it plays in
+[[https://horizonofreason.com/first-law-of-consumer-behaviour/][developing
+their public self]]. Consumers will most likely have a much lower level
+of involvement with the instant coffee they drink than with the clothes
+they wear.
+
+*** Managerial Relevance
+    :PROPERTIES:
+    :CUSTOM_ID: managerial-relevance
+    :END:
+
+The level of consumer involvement depends on a complex array of factors.
+These factors are related to psychology, situational factors and the
+marketing mix of the service provider. The lowest level of involvement
+is considered a state of inertia which occurs when people habitually
+purchase a product without comparing alternatives.
+
+From a managerial point of view, involvement is crucial because it is
+causally related to willingness to pay and perceptions of quality. 
+Consumers with a higher level of involvement are willing to pay more for
+a service and have a more favourable perception of quality.
+Understanding
+[[https://lucidmanager.org/tap-water-involvement/][involvement in the
+context of urban water supply]] is also important because sustainably
+managing water as a common pool resource requires the active involvement
+of all users.
+
+Cult products have the highest possible level of involvement as
+customers are fully devoted to a particular product or brand. Commercial
+organisations use this knowledge to their advantage by maximising the
+level of consumer involvement through branding and advertising. This
+strategy is used effectively by the
+[[https://lucidmanager.org/bottled-water-marketing/][bottled water
+industry]]. Manufacturers focus on enhancing the emotional aspects of
+their product rather than on improving the cognitive elements. Water
+utilities tend to use a reversed strategy and emphasise the cognitive
+aspects of tap water, the pipes, plants and pumps, rather than trying to
+create an emotional relationship with their consumers.
+
+** Measuring Consumer Involvement
+   :PROPERTIES:
+   :CUSTOM_ID: measuring-consumer-involvement
+   :END:
+
+Asking consumers directly about their level of involvement would not
+lead to a stable answer because each respondent will interpret the
+question differently. The best way to measure psychological states or
+psychometrics is to ask a series of questions that are linguistically
+related to the topic of interest.
+
+The most cited method to measure consumer involvement in the Personal
+Involvement Index, developed by Judy Zaichowsky. This index is a
+two-dimensional scale consisting of:
+
+- cognitive involvement (importance, relevance, meaning, value and need)
+- affective involvement (involvement, fascination, appeal, excitement
+  and interest).
+
+The survey instrument consists of ten semantic-differential items. A
+Semantic Differential is a type of a rating scale designed to measure
+the meaning of objects, events or concepts. The researcher translates
+the concept, such as involvement, into a list of synonyms and their
+associated antonyms.
+
+In the involvement survey, participants position their views between two
+extremes, such as Worthless and Valuable or Boring and Interesting. The
+level of involvement is the sum of all answers, which is a number
+between 10 and 70. In more detailed analysis, each item in the scale can
+be of a different strength.
+
+#+CAPTION: Personal Involvement Inventory (Zaichowsky 1994).
+[[/images/blogs.dir/4/files/sites/4/2013/01/PII.jpg]]
+
+** Exploratory Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: exploratory-analysis
+   :END:
+
+For my dissertation about
+c[[https://lucidmanager.org/invisible-water-utility/][ustomer service in
+water utilities]], I measured the level of involvement that consumers
+have with tap water. 832 tap water consumers completed this survey in
+Australia and the United States.
+
+This data set contains other information, and the code selects only
+those variable names starting with "/p/" (for Personal Involvement
+Inventory). Before we analyse any data, we remove customers who provided
+the same answers to all items, or did not respond to all questions.
+These responses are most likely invalid, which leaves 757 rows of data.
+
+A boxplot is a convenient way to view the responses to multiple survey
+items in one visualisation. This plot immediately shows an interesting
+pattern in the answers. It seems that responses to the first five items
+were generally higher than those for the last five items. This result
+seems to indicate a demarcation between cognitive and affective
+involvement.
+
+#+CAPTION: Responses to Personal Involvement Index by tap water
+consumers.
+[[/images/blogs.dir/4/files/sites/4/2019/01/involvement_explore-1024x1024.png]]
+
+Next step in the exploratory analysis is to investigate how these
+factors correlate with each other. The correlation plot below shows that
+all items strongly correlate with each other. In correspondence with the
+boxplots above, the first five and the last five items correlate more
+strongly with each other. This plot suggests that the two dimensions of
+the involvement index correlate with each other. The next section shows
+how to use factor analysis in R to check the significance of these
+correlation patterns.
+
+#+CAPTION: Correlation matrix for the Personal Involvement Index
+[[/images/blogs.dir/4/files/sites/4/2019/01/involvement_correlation.png]]
+
+** Factor Analysis in R
+   :PROPERTIES:
+   :CUSTOM_ID: factor-analysis-in-r
+   :END:
+
+Researchers often confuse Factor Analysis with Principal Component
+Analysis. The outcomes of are very similar when applied to the same data
+set. Both methods are similar but have a different purpose. Principal
+Component Analysis is a data-reduction technique that serves to reduce
+the number of variables in a problem. The specific purpose of Factor
+Analysis is to uncover latent variables. The mathematical principles for
+both techniques are similar, but not the same and should not be
+confused.
+
+One of the most important decisions in factor analysis is to decide how
+to rotate the factors. There are two types: orthogonal or oblique. In
+simple terms, orthogonal rotations seek to reduce the correlation
+between dimensions and oblique rotation allow for dimensions to relate
+to each other. Because of the strong correlations in the correlation
+plot and the fact that both dimensions measure involvement, this
+analysis uses oblique rotation. The visualisation below shows how each
+of the items how, and the two dimensions relate to each other.
+
+#+CAPTION: Factor analysis in R with Psych package.
+[[/images/blogs.dir/4/files/sites/4/2019/01/involvement_factors.png]]
+
+This simple factor analysis in R shows the basic principle of how to
+analyse psychometric data. The psych package has a lot more specialised
+tools to dig deeper into the information. This article has not assessed
+the validity of this construct, or evaluated the reliability of the
+factors. Perhaps that is for a future article.
+
+** The R Code
+   :PROPERTIES:
+   :CUSTOM_ID: the-r-code
+   :END:
+
+You can view the code below. Go to my
+[[https://github.com/pprevos/Marketing][Github Repository]] to see the
+code and the data source.
+
+#+BEGIN_EXAMPLE
+  ## ConsumerInvolvement.R
+  library(tidyverse)
+  library(psych)
+  consumers <- read_csv("customers_quan.csv") %>%
+      select(starts_with("p"))
+  dim(consumers)
+
+  ## Data cleansing
+  sdevs <- apply(consumers, 1, sd, na.rm = TRUE)
+  incomplete <- apply(consumers, 1, function(i) any(is.na(i)))
+  consumers <- consumers[sdevs != 0 & !incomplete, ]
+  dim(consumers)
+
+  ## Exploratory Analysis
+  consumers %>%
+      rownames_to_column(var = "Subject") %>%
+      gather(Item, Response, -Subject) %>%    
+      ggplot(aes(Item, Response)) + geom_boxplot(fill = "#f7941d") +
+      ggtitle("personal Involvement Index",
+              subtitle = paste("Tap Water Consumers USA and Australia (n =",
+                               nrow(consumers), ")"))
+  ggsave("involvement_explore.png", dpi = 300)
+
+  corPlot(consumers)
+
+  ## Factor Analysis
+
+  piiFac <- fa(consumers, nfactors = 2, rotate = "oblimin")
+
+  fa.diagram(piiFac)
+#+END_EXAMPLE
+
+** Learn to use R Code to Solve Water Problems
+   :PROPERTIES:
+   :CUSTOM_ID: learn-to-use-r-code-to-solve-water-problems
+   :END:
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

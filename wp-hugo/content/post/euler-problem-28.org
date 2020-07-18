@@ -1,0 +1,115 @@
+#+title: Euler Problem 28: The Ulam Spiral and Quadratic primes
+#+date: 2017-07-20 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 28 takes us to the world of the
+[[https://en.wikipedia.org/wiki/Ulam_spiral][Ulam Spiral]]. This is a
+spiral that contains sequential positive integers in a square spiral,
+marking the prime numbers. Stanislaw Ulam discovered that a lot of
+primes are located along the diagonals. These diagonals can be described
+as polynomials. The Ulam Spiral is thus a way of generating quadratic
+primes
+([[https://lucidmanager.org/quadratic-primes-euler-problem-27/][Euler
+Problem 27]]).
+
+#+CAPTION: Ulam Spiral (WikiMedia).
+[[https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Ulam_spiral_howto_primes_only.svg/507px-Ulam_spiral_howto_primes_only.svg.png]]
+
+** Euler Problem 28 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-28-definition
+   :END:
+
+Starting with the number 1 and moving to the right in a clockwise
+direction a 5 by 5 spiral is formed as follows:
+
+#+BEGIN_EXAMPLE
+  21 22 23 24 25
+  20 07 08 09 10
+  19 06 01 02 11
+  18 05 04 03 12
+  17 16 15 14 13
+#+END_EXAMPLE
+
+It can be verified that the sum of the numbers on the diagonals is 101.
+What is the [[https://projecteuler.net/problem=28][sum of the numbers on
+the diagonals in]] a 1001 by 1001 spiral formed in the same way?
+
+** Proposed Solution
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solution
+   :END:
+
+To solve this problem we do not need to create a matrix. This code
+calculates the values of the corners of a matrix with size $latex n
+&s=1$. The lowest number in the matrix with size $latex n &s=1$ is
+$latex n(n-3)+4$. The numbers increase by $latex n-1 &s=1$. The code
+steps through all matrices from size 3 to 1001. The solution uses only
+the uneven sized matrices because these have a centre. The answer to the
+problem is the sum of all numbers.
+
+#+BEGIN_EXAMPLE
+  size <- 1001 # Size of matrix
+  answer <- 1 # Starting number
+
+  ## Define corners of subsequent matrices
+  for (n in seq(from = 3, to = size, by = 2)) {
+      corners <- seq(from = n * (n - 3) + 3, by = n - 1, length.out = 4)
+      answer <- answer + sum(corners)
+  }
+  print(answer)
+#+END_EXAMPLE
+
+** Plotting the Ulam Spiral
+   :PROPERTIES:
+   :CUSTOM_ID: plotting-the-ulam-spiral
+   :END:
+
+We can go beyond Euler Problem 28 and play with the mathematics. This
+code snippet plots all the prime numbers in the Ulam Spiral. Watch the
+Numberphile video for an explanation of the patterns that appear along
+the diagonals.
+
+The code creates a matrix of the required size and fills it with the
+Ulam Spiral. The code then identifies all primes using the /is.prime/
+function from [[https://lucidmanager.org/euler-problem-7/][Euler Problem
+7]], as visualised on the top of this article. You can download  the
+latest version of this code from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem028.R][GitHub]].
+
+#+CAPTION: Ulam Spiral prime numbers.
+[[/images/blogs.dir/9/files/sites/9/2017/07/ulamspiral-1024x470.png]]
+
+{{< youtube "iFuR97YcSLM" >}}
+
+Prime spirals: Numberphile.
+
+#+BEGIN_EXAMPLE
+  size <- 201 # Size of matrix
+  ulam <- matrix(ncol = size, nrow = size)
+  mid <- floor(size / 2 + 1)
+  ulam[mid, mid] <- 1
+  for (n in seq(from = 3, to = size, by = 2)) {
+      numbers <- (n * (n - 4) + 5) : ((n + 2) * ((n + 2) - 4) + 4)
+      d <- mid - floor(n / 2)
+      l <- length(numbers)
+      ulam[d, d:(d + n - 1)] <- numbers[(l - n + 1):l]
+      ulam[d + n - 1, (d + n - 1):d] <- numbers[(n - 1):(n - 2 + n)]
+      ulam[(d + 1):(d + n - 2), d] <- numbers[(l - n):(l - 2 * n + 3)]
+      ulam[(d + 1):(d + n - 2), d + n - 1] <- numbers[1:(n - 2)]
+  }
+  ulam.primes <- apply(ulam, c(1, 2), is.prime)
+
+  library(ggplot2)
+  library(reshape2)
+  ulam.primes <- melt(ulam.primes)
+
+  ggplot(ulam.primes, aes(x = Var1, y = Var2, fill = value)) +
+      geom_tile() +
+      scale_fill_manual(values = c("white", "black")) +
+      guides(fill =FALSE) +
+      theme(void)
+#+END_EXAMPLE

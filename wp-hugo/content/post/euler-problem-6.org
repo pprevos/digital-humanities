@@ -1,0 +1,81 @@
+#+title: Euler Problem 6: Sum Square Difference | Solution in R
+#+date: 2017-01-05 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 6 is another
+[[https://lucidmanager.org/euler-problem-1/][trivial]] one that only
+requires a basic understanding of coding in R but it does teach use
+something about computer science.
+
+** Euler Problem 6 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-6-definition
+   :END:
+
+The sum of the squares of the first ten natural numbers is:
+
+$latex 1^2 + 2^2 + \ldots + 10^2 = 385$
+
+The square of the sum of the first ten natural numbers is:
+
+$latex (1 + 2 + \ldots + 10)^2 = 552 = 3025$
+
+The difference between the sum of the squares of the first ten natural
+numbers and the square of the sum is $latex 3025 - 385 = 2640$. Find the
+[[https://projecteuler.net/problem=6][difference between the sum of the
+squares]] of the first one hundred natural numbers and the square of the
+sum.
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+This is a straightforward problem for vector processing capabilities in
+R. You can view the code below or download it from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem006.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  answer <- sum(1:100)^2 - sum((1:100)^2)
+  print(answer)
+#+END_EXAMPLE
+
+This problem can also be solved arithmetically. When Carl Friedrich
+Gauss (1777--1855) when he was a child his teacher challenged his
+students to add all numbers from 1 to 100. All of his friends struggled
+to add all the 100 numbers one by one but Carl completed the task in a
+few seconds.
+
+The solution shown above is like Carl's classmates who slavishly add all
+numbers using brute force. Gauss' solution only requires one simple
+step. Computer scientists use Big O notation to describe the steps it
+takes to complete an algorithm.
+
+In
+[[https://rob-bell.net/2009/06/a-beginners-guide-to-big-o-notation/][Big-O
+Notation]] the first solution is $latex O(n)$ which means that the
+number of steps in the algorithm grows in direct proportion to the data
+set. In this case, we only look at 100 numbers. But solving this problem
+for many billions of numbers would pose some practical problems. Gauss'
+solution is $latex O(1)$, which means that the solution only requires
+one step, regardless of the size of the data set.
+
+Gauss found that the sum of natural numbers can be expressed as:
+
+$latex n(n + 1)/2$
+
+The sum of the squares of the first $latex n &s=2$ natural numbers is:
+
+$latex n(n+1)(2n+1)/6$
+
+With these two formulas, a fast solution without having to use loops can
+be written.
+
+#+BEGIN_EXAMPLE
+  n <- 100
+  answer <- ((n * (n + 1)) / 2)^2 - (n * (n + 1) * (2 * n + 1)) / 6
+  print(answer)
+#+END_EXAMPLE

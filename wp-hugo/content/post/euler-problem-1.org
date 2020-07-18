@@ -1,0 +1,103 @@
+#+title: Euler Problem 1: Multiples of 3 or 5 - Solutions in R
+#+date: 2016-11-30 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+I have started solving [[//projecteuler.net/][Project Euler]] problems
+in R to sharpen my skills in coding and mathematics. This first problem
+is trivial, but it shows some of the different methods that R can deploy
+to solve the same problem.
+[[https://lucidmanager.org/euler-problem-5/][Euler Problem 5]] also
+discusses divisors.
+
+** Euler Problem 1 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-1-definition
+   :END:
+
+If we list all the natural numbers below 10 that are multiples of 3 or
+5, we get 3, 5, 6 and 9. The sum of these multiples is 23. Find the
+[[https://projecteuler.net/problem=1][sum of all the multiples]] of 3 or
+5 below 1000.
+
+** Proposed Solutions
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solutions
+   :END:
+
+The problem definition on the Project Euler website is not consistent:
+the title mentions multiples of 3 AND 5, while the description asks for
+multiples of 3 OR 5.
+
+There are four ways to solve Euler Problem 1 in R:
+
+1. Loop through all numbers from 1 to 999 and test whether they are
+   divisible by 3 or by 5 using the
+   [[https://campus.datacamp.com/courses/free-introduction-to-r/chapter-1-intro-to-basics-1?ex=2][modulus
+   function]].
+2. Doing the same, using
+   [[http://www.r-tutor.com/r-introduction/vector/vector-arithmetics][Vector
+   arithmetic]].
+3. Sum the
+   [[https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/seq][sequences]]
+   of the multiples of 3 and 5 and exclude duplicates (numbers divisible
+   by 15).
+4. Analytical approach.
+
+The three brute-force solutions are swift because of the low number of
+steps to find a solution. An analytical solution significantly reduces
+the processing time as it only requires one step.
+
+The problem involves
+[[https://en.wikipedia.org/wiki/Arithmetic_progression][arithmetic
+progressions]], which are sequences of numbers with a constant
+difference. The sequence 1, 4, 7, 10, 13, ... is an arithmetic
+progression with a common difference of three. The sum of an arithmetic
+progression, where $latexn$ is the number of elements and $late xa_1$
+and $latex a_n&s=2$ are the lowest and highest value, is:
+
+$latex \frac{1}{2} n(a_1 + a_n)$
+
+The numbers divisible by $latex n=3$ can be expressed as:
+
+$latex \mathrm{sum}_3(999)=3+6+ \ldots + 999 = 3(1+2+ \ldots + 333)$
+
+We can now calculate the sum of all divisors by combining the above
+progression with the formula for arithmetic progressions as expressed in
+the above code, where $latex m$ is the divisor and $latex n$ the extent
+of the sequence. $latex p$ is the highest number less than $latex n$,
+divisible by $latex m$. In the case of 5, this number is 995.
+
+$latex p = n \lfloor (m/n) \rfloor$
+
+Substitution gives:
+
+$latex \mathrm{sum}_m(n) = p (1+(p/m))/2$
+
+View the code below or download the latest version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem001.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  ## Solution 1
+  answer <- 0
+  for (i in 1:999) {
+      if (i %% 3 == 0 | i %% 5 == 0) 
+          answer <- answer + i
+  }
+  print(answer)
+
+  ## Solution 2
+  sum((1:999)[((1:999) %% 3 == 0) | ((1:999) %% 5 == 0)])
+
+  ## Solution 3
+  sum(unique(c(seq(3, 999, 3), seq(5, 999, 5))))
+
+  ## Solution 4
+  SumDivBy <- function(m, n) {
+      p <- floor(n / m) * m
+      return (p * (1 + (p / m)) / 2)
+  }
+  SumDivBy(3, 999) + SumDivBy(5, 999) - SumDivBy(15, 999)
+#+END_EXAMPLE

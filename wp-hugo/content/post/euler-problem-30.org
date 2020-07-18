@@ -1,0 +1,130 @@
+#+title: Digit fifth powers: Euler Problem 30
+#+date: 2017-08-24 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 30 is another number crunching problem that deals with
+numbers to the power of five. Two other Euler problems dealt
+with raising numbers to a power. The
+[[https://lucidmanager.org/euler-problem-29-distinct-powers/][previous
+problem]] looked at permutations of powers and
+[[https://lucidmanager.org/euler-problem-16-power-digit-sum/][problem
+16]] asks for the sum of the digits of $latex 2^{1000}$. Euler Problem
+24 discusses [[https://lucidmanager.org/euler-problem-24/][lexicographic
+permutations]].
+
+** Euler Problem 30 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-30-definition
+   :END:
+
+Surprisingly there are only three numbers that can be written as the sum
+of fourth powers of their digits:
+
+$latex 1634 = 1^4 + 6^4 + 3^4 + 4^4$
+
+$latex 8208 = 8^4 + 2^4 + 0^4 + 8^4$
+
+$latex 9474 = 9^4 + 4^4 + 7^4 + 4^4$
+
+As $latex 1 = 1^4 $ is not a sum, it is not included.
+
+The sum of these numbers is $latex 1634 + 8208 + 9474 = 19316$.
+[[https://projecteuler.net/problem=30][Find the sum]] of all the numbers
+that can be written as the sum of the fifth powers of their digits.
+
+** Digit Sum
+   :PROPERTIES:
+   :CUSTOM_ID: digit-sum
+   :END:
+
+The mathematics in this problem is about the digit sum, which is the sum
+of all digits in the relevant number base.
+
+The digit sum of a number $latex x$ in base 10 is given by:
+
+$latex \sum_{n=0}^{\lfloor \log_{10} x\rfloor} \frac{1}{10^n}(x \bmod
+10^{n + 1} - x \bmod 10^n) &s=2$.
+
+Computer scientists use digit sums in cryptography and data validation.
+You can find the digital sum base-10 numbers in the Online Encyclopedia
+of Integer Sequences ([[http://oeis.org/A007953][A007953]]).
+
+Checksum algorithms use digit sums as a quality assurance method. For
+example, the final digit in the ten-digit International Standard Book
+Numbers
+([[https://isbn-information.com/check-digit-for-the-13-digit-isbn.html][ISBN]])
+is a check digit. You can compute the check digit by multiplying each
+digit by its position in the ISBN number (alternating by 3 and 1), and
+taking the sum of these products. The check digit is 0 when the modules
+10 of this modulus is zero, otherwise it is 10 minus the remainder. In R
+code, determining the check digit for a 13-digit ISBN number works as
+follows:
+
+#+BEGIN_EXAMPLE
+  check_isbn13 <- function(isbn) {
+      isbn <- gsub(" |-", "", isbn)
+      check_sum <- 0
+      for (i in 1:12) {
+          m <- ifelse(i %% 2 == 0, 3, 1)
+          check_sum <- check_sum + m * as.numeric(substr(isbn, i, i))
+      }
+      check_sum <- ifelse(check_sum %% 10 == 0, 0, 10 - check_sum %% 10)
+      check_sum == substr(isbn, 13, 13)
+  }
+  check_isbn13("978-0-9875669-4-2")
+#+END_EXAMPLE
+
+** Proposed Solution to Euler Problem 30
+   :PROPERTIES:
+   :CUSTOM_ID: proposed-solution-to-euler-problem-30
+   :END:
+
+The problem asks for a brute-force solution but we have a halting
+problem. How far do we need to go before we can be certain there are no
+sums of fifth power digits? Do we need to search until infinity, which
+means we can never solve the problem? We can limit the solution space
+because the solution will have lower and upper limits. The upper bound
+is a number $latex a \cdot 9^5 $ with $latex a $ digits.
+
+In base ten, the highest digit is $latex 9$ and $latex 9^5=59049$, which
+has five digits. This implies that the highest possible number which
+equals the sum of the fifth power of its digits is $latex 5 times
+9^5=295245$. The lowest possible number is $latex 2 times 2^5 = 64$. All
+numbers with this property thus must range between these two values.
+
+The code to solve this project first declares the exponent and
+determines the lower and upper boundaries of the solution space. Change
+the variable $latex n$ to try other exponents. The loop cycles through
+the digits of each number and tests whether the sum of the fifth powers
+equals the number. You can view the code below or download it
+from [[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem030.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  m <- 5
+  highest <- round(log10(9^m)) * 9^m
+  answer <- 0
+  for (x in 2:highest) {
+      n <- 0:log10(x)
+      power.sum <- sum(((1/10^n) * (x %% 10^(n + 1) - x %% 10^n))^m)
+      if (power.sum == x) {
+          print(x)
+          answer <- answer + x
+      }
+  }
+  print(answer)
+#+END_EXAMPLE
+
+** With the Fifth Power Comes Great Responsibility
+   :PROPERTIES:
+   :CUSTOM_ID: with-the-fifth-power-comes-great-responsibility
+   :END:
+
+[[https://lucidmanager.org/tag/numberphile/][Numberphile]] has a nice
+video about a trick to quickly calculate the fifth root of a number that
+makes you look like a mathematical wizard. Not quite related to this
+problem, but nevertheless interesting.
+
+{{< youtube "y8acoaakvPM" >}}

@@ -1,0 +1,170 @@
+#+title: Topological Tomfoolery in R: Plotting a Möbius Strip and Klein Bottle
+#+date: 2018-02-21 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile R-Language
+#+draft: true
+
+Geometry is an entertaining branch of mathematics. Topology is,
+according to [[http://www.pickover.com/][Clifford Pickover]], the "silly
+putty of mathematics". This branch of maths studies the transformation
+of shapes, knots and other complex geometry problems.  One of the most
+famous topics in topology is the
+[[https://en.wikipedia.org/wiki/M%C3%B6bius_strip][Möbius strip]]. This
+shape has some unusual properties which have inspired many artists,
+inventors, mathematicians and magicians.
+
+You can make a Möbius strip by taking a strip of paper, giving it one
+twist and glue the ends together to form a loop. If you now cut this
+strip lengthwise in half, you don't end-up with two separate strips, but
+with one long one.
+
+{{< youtube "https://youtu.be/wKV0GYvR2X8" >}}
+
+The Möbius strip can also be described with the following parametric
+equations (where $latex 0 \leq u \leq 2\pi $, $latex -1 \leq v \leq 1 $
+and $latex R $ is the radius of the loop):
+
+$latex x(u,v)= \left(R+\frac{v}{2} \cos \frac{u}{2}\right)\cos u $\\
+$latex y(u,v)= \left(R+\frac{v}{2} \cos\frac{u}{2}\right)\sin u $\\
+$latex z(u,v)= \frac{v}{2}\sin \frac{u}{2} $
+
+The
+[[https://math.stackexchange.com/questions/638225/understanding-the-equation-of-a-m%C3%B6bius-strip][mathematics
+of this set of parametric equations]] is not as complex as it looks.
+$latex R $ is the radius of the ring, $latex u $ is the polar angle of
+each point and $latex v $ indicates the width of the strip. The polar
+angle $latex u/2 $ indicates the number of half twists. To make the ring
+twist twice, change the angle to $latex u $.
+
+For my data science day job, I have to visualise some three-dimensional
+spaces, so I thought I best learn how to do this by visualising a Möbius
+strip, using these three equations.
+
+** Plotting a Möbius Strip
+   :PROPERTIES:
+   :CUSTOM_ID: plotting-a-möbius-strip
+   :END:
+
+The
+[[https://cran.r-project.org/web/packages/rgl/vignettes/rgl.html][RGL
+package]] provides the perfect functionality for plotting Möbius strips.
+This package produces interactive three-dimensional plots that you can
+zoom and rotate. This package has many options to change lighting,
+colours, shininess and so on. The code to create for plotting a Möbius
+strip is straightforward.
+
+The first section defines the parameters and converts the $latex u $ and
+$latex v $ sequences to a mesh (from the
+[[https://cran.r-project.org/web/packages/plot3D/index.html][plot3D
+package]]). This function creates two matrices with every possible
+combination of $latex u $ and $Latex v $ which are used to calculate the
+$latex x, y, z $ points.
+
+The last three lines define a 3D window with a white background and plot
+the 3D surface in blue. You can explore the figure with your mouse by
+zooming and rotating it. Parametric equations can be a bit of fun, play
+with the formula to change the shape and see what happens. You can view
+the code below, or find the latest version on
+[[https://github.com/pprevos/r.prevos.net/blob/master/Miscellaneous/Mathematics/moebius.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  library(rgl)
+  library(plot3D)
+
+  ## Define Parameters
+  R <- 1 # Radius
+  n <- 1 # Number of twists
+  u <- seq(0, 2 * pi, length.out = 100)
+  v <- seq(-1, 1, length.out = 100)
+  m <- mesh(u, v)
+  u <- m$x
+  v <- m$y
+
+  ## Möbius Strip parametric equations
+  x <- (R * 2 + v/2 * cos(n * u /2)) * cos(u)
+  y <- (R + v/2 * cos(n * u /2)) * sin(u)
+  z <- v/2 * sin(u / 2)
+
+  ## Visualise
+  bg3d(color = "white")
+  surface3d(x, y, z, color= "blue")
+#+END_EXAMPLE
+
+#+CAPTION: Plotting a Möbius Strip in R with RGL
+[[/images/blogs.dir/4/files/sites/4/2018/02/moebius-strip.jpg]]
+
+We can take it to the next level by plotting a three-dimensional Möbius
+strip, or a [[https://en.wikipedia.org/wiki/Klein_bottle][Klein
+Bottle]]. The parametric equations for the bottle are mind boggling:
+
+$latex x(u,v) = -\frac{2}{15} \cos u (3 \cos{v}-30 \sin{u}+90 \cos^4{u}
+\sin{u} -60 \cos^6{u} \sin{u} +5 \cos{u} \cos{v} \sin{u}) $
+
+$latex y(u,v) = -\frac{1}{15} \sin u (3 \cos{v}-3 \cos^2{u} \cos{v}-48
+\cos^4{u} \cos{v} + 48 \cos^6{u} \cos{v} - 60 \sin{u}+5 \cos{u} \cos{v}
+\sin{u}-5 \cos^3{u} \cos{v} \sin{u}-80 \cos^5{u} \cos{v} \sin{u}+80
+\cos^7{u} \cos{v} \sin{u}) $
+
+$latex z(u,v) = \frac{2}{15} (3+5 \cos{u} \sin{u}) \sin{v} $
+
+Where: $latex 0 \leq u \leq \pi$ and $latex 0 \leq v \leq 2$.
+
+The code to visualise this bottle is essentially the same, just more
+complex equations.
+
+#+BEGIN_EXAMPLE
+  ## Klein Bottle (3D Möbius Strip)
+  u <- seq(0, pi, length.out = 100)
+  v <- seq(0, 2 * pi, length.out = 100)
+  m <- mesh(u, v)
+  u <- m$x
+  v <- m$y
+  x <- (-2 / 15) * cos(u) * (3 * cos(v) - 30 * sin(u) + 90 * cos(u)^4 * sin(u) - 
+       60 * cos(u)^6 * sin(u) + 5 * cos(u) * cos(v) * sin(u))
+  y <- (-1 / 15) * sin(u) * (3 * cos(v) - 3 * cos(u)^2 * cos(v) - 48 * cos(u)^4 * 
+       cos(v) + 48 * cos(u)^6 * cos(v) - 60 * sin(u) + 5 * cos(u) * cos(v) * 
+       sin(u) - 5 * cos(u)^3 * cos(v) * sin(u) - 80 * cos(u)^5 * cos(v) * sin(u) + 
+       80 * cos(u)^7 * cos(v) * sin(u))
+  z <- (+2 / 15) * (3 + 5 * cos(u) * sin(u)) * sin(v)
+
+  bg3d(color = "white")
+  surface3d(x, y, z, color= "green", alpha = 0.5)
+#+END_EXAMPLE
+
+#+CAPTION: Plotting a Klein bottle in R using RGL
+[[/images/blogs.dir/4/files/sites/4/2018/02/klein-bottle-1024x787.jpg]]
+
+The RGL package has some excellent facilities to
+visualise three-dimensional objects, far beyond simple strips. I am
+still learning and am working toward using it to visualise bathymetric
+surveys of water reservoirs. Möbius strips are, however, a lot more fun.
+
+If you are interested in visualising the oddities of mathematics, then
+feel free to peruse my article about the
+[[https://lucidmanager.org/sierpinski-triangle/][Sierpinsi triangle]].
+
+** Creating Real Möbius Strips
+   :PROPERTIES:
+   :CUSTOM_ID: creating-real-möbius-strips
+   :END:
+
+Even more fun than playing with virtual Möbius strips is to make some
+paper versions and start cutting. If you like to create a Möbius strip,
+you can recycle then purchase a large zipper from your local
+haberdashery shop, add some hook-and-loop fasteners to the ends and
+start playing. If you like to know more about the mathematics of the
+topological curiosity, then I can highly recommend
+[[http://amzn.to/2EeXJgI][Clifford Pickover's book on the topic]].
+
+In the first half of the twentieth century, many magicians used the
+Möbius strip as a magic trick. The great Harry Blackstone performed it
+regularly in his show.
+
+{{< youtube "26s" >}}
+
+If you are interested in magic tricks and Möbius strips, including how
+to create a zipper version, then you can read my ebook on the Afghan
+bands.
+
+[[https://magicperspectives.net/wp-content/blogs.dir/2/files/sites/2/2018/08/Afghan-Bands-3d.jpg]]

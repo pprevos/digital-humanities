@@ -1,0 +1,109 @@
+#+title: Euler Problem 3: Largest Prime Factor | Solution in R
+#+date: 2016-12-14 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Numberphile Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 3 is about prime factors, which are some of the most
+important numbers of the digital economy. RSA encryption is based on the
+fact that determining the prime factors of huge numbers takes a very
+long time. So much time in fact that the cost of breaking the encryption
+outweigh the benefits of obtaining the secret.
+
+Prime numbers are the basic building blocks of the natural numbers as
+every number, except the primes themselves. Every natural number can be
+written as the product of a series of primes. The RSA encryption system
+uses large primes to keep electronic messages away from prying eyes, as
+explained in the Numberphile video below.
+
+{{< youtube "M7kEpw1tn50" >}}
+
+Prime numbers are a favourite topic in Project Euler.
+[[https://lucidmanager.org/euler-problem-7/][Problem 7]] asks for the
+first ten thousand primes and
+[[https://lucidmanager.org/euler-problem-10/][Problem 10]] looks at the
+sum of all the primes below two million.
+
+** Euler Problem 3 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-3-definition
+   :END:
+
+The prime factors of 13195 are 5, 7, 13 and 29. What is the
+[[https://projecteuler.net/problem=3][largest prime factor]] of the
+number 600851475143?
+
+** Generating Prime Numbers
+   :PROPERTIES:
+   :CUSTOM_ID: generating-prime-numbers
+   :END:
+
+This solution relies on two functions that can be used for multiples
+problems. The
+[[https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes][Sieve of
+Eratosthenes]] generates prime numbers from 2 to n. The code is
+commented to explain the sieve, and the image shows how numbers from 1
+to 100 are sieved to find the primes.
+
+[[https://upload.wikimedia.org/wikipedia/commons/b/b9/Sieve_of_Eratosthenes_animation.gif]]
+
+The =prime.factors= function generates the list of unique prime divisors
+and then produces the factors. The factors are identified by dividing
+the number by the candidate prime factors until the result is 1.
+
+The solution can also be found by using the /primeFactors/ function in
+the [[https://cran.r-project.org/web/packages/numbers/index.html][numbers]]
+package. This package provides a range of functions related to prime
+numbers and is much faster than the basic R code.
+
+The most recent version of this code is shown below and you can download
+it
+from [[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem003.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  esieve <- function(n) {
+      if (n == 1) return(NULL)
+      if (n == 2) return(n)
+      ## Create a list of consecutive integers {2,3,... n}.
+      l <- 2:n
+      ## Start counter
+      i <- 1
+      ## Select p as the first prime number in the list, p = 2.
+      p <- 2
+      while (p^2 <= n) {
+          ## Remove all multiples of p from the l.
+          l <- l[l == p | l %% p!= 0]
+          ## set p equal to the next integer in l which has not been removed.
+          i <- i + 1 ## Repeat steps 3 and 4 until p^2 > n,
+          ## all the remaining numbers in the list are primes
+          p <- l[i]
+      }
+      return(l)
+  }
+
+  prime.factors <- function (n) {
+      ## Define list of factors
+      factors <- c()
+      ## Define primes to be tested
+      primes <- esieve(floor(sqrt(n)))
+      ## Idenitfy prime divisors
+      d <- which(n %% primes == 0) 
+      ## No prime divisors
+      if (length(d) == 0) 
+          return(n)
+      ## Test candidate primes
+      for (q in primes[d]) {
+          ## Generate list of factors
+          while (n %% q == 0) {
+              factors <- c(factors, q)
+              n <- n/q } } 
+              if (n > 1) 
+                  factors <- c(factors, n)
+      return(factors)
+  }
+  max(prime.factors(600851475143))
+
+  library(numbers)
+  max(primeFactors(600851475143))
+#+END_EXAMPLE

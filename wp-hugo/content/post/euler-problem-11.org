@@ -1,0 +1,50 @@
+#+title: Euler Problem 11: Largest Product in a Grid
+#+date: 2017-02-09 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 11 is a fairly straightforward application of
+[[http://www.r-tutor.com/r-introduction/vector/vector-arithmetics][vector
+arithmetics]] in R. Just like problem 8, it asks for the
+[[https://lucidmanager.org/euler-problem-8/][largest product]].
+
+** Euler Problem 11 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-11-definition
+   :END:
+
+In the 20 × 20 grid below, four numbers along a diagonal line have been
+marked in red.
+
+[[/images/blogs.dir/4/files/sites/4/2017/02/euler-problem-11a.png]]
+
+The product of these numbers is 26 × 63 × 78 × 14 = 1,788,696.
+[[https://projecteuler.net/problem=11][What is the greatest product]] of
+four adjacent numbers in the same direction (up, down, left, right, or
+diagonally) in the 20 by 20 grid?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The solution applies straightforward vector arithmetic. The product of
+all verticals is an array of the product of rows 1 to 4, rows 2 to 5 and
+so on. The code uses a similar logic for the horizontals and the
+diagonals. You can view the code below or download it from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem011.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  square <- readLines("Data/p011_matrix.txt")
+  square <- as.numeric(unlist(lapply(square, function(x){strsplit(x, " ")})))
+  square <- matrix(square, ncol = 20)
+
+  prod.vert <- square[1:17, ] * square[2:18, ] * square[3:19, ] * square[4:20, ]
+  prod.hori <- square[,1:17] * square[,2:18] * square[,3:19] * square[,4:20]
+  prod.dia1 <- square[1:17, 1:17] * square[2:18, 2:18] * square[3:19, 3:19] * square[4:20, 4:20]
+  prod.dia2 <- square[4:20, 1:17] * square[3:19, 2:18] * square[2:18, 3:19] * square[1:17, 4:20]
+
+  answer <- max(prod.vert, prod.hori, prod.dia1, prod.dia2)
+#+END_EXAMPLE

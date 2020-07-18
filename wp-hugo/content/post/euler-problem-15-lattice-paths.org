@@ -1,0 +1,83 @@
+#+title: Euler Problem 15: Pathways Through a Lattice - Taxicab geometry
+#+date: 2017-03-09 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 15 analyses
+[[https://en.wikipedia.org/wiki/Taxicab_geometry][taxicab geometry]].
+This system replaces the usual distance function with the sum of the
+absolute differences of their Cartesian coordinates. In other words, the
+distance a taxi would travel in a grid plan instead of the shortest
+distance between two points. In chess, the distance between squares on
+the chessboard for rooks is measured in taxicab distance.
+
+The fifteenth Euler problem asks to determine the number of
+[[http://www.intmath.com/blog/mathematics/taxicab-geometry-4941][possible
+routes a taxi can take]] in a city of a certain size. This problem is
+logically similar to
+[[https://lucidmanager.org/euler-problem-18-67-maximum-path-sum/][Euler
+Problem 18 and 67]].
+
+{{< youtube "Pll5MXk5AMA" >}}
+
+** Euler Problem 15 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-15-definition
+   :END:
+
+[[https://projecteuler.net/project/images/p015.png]]
+
+Starting in the top left corner of a 2×2 grid, and only being able to
+move to the right and down, there are exactly 6 routes to the bottom
+right corner. [[https://projecteuler.net/problem=15][How many
+possible routes]] are there through a 20×20 grid?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The defined lattice is one larger than the number of squares. Along the
+edges of the matrix, only one pathway is possible: straight to the right
+or down. We can calculate the number of possible pathways for the
+remaining number by adding the number to the right and below the point.
+
+$latex p_{i,j}=p_{i,j-1}+p_{{i+1},j}$
+
+For the two by two lattice the solution space is:
+
+6  3  1\\
+3  2  1\\
+1  1  0
+
+The total number of pathways from the upper left corner to the lower
+right corner is thus 6. This logic can now be applied to a grid of any
+arbitrary size using the following code. The code defines the lattice
+and initiates the boundary conditions. The bottom row and the right
+column are filled with 1 as there is only one solution from these
+points. The code then calculates the pathways by working backwards
+through the matrix. The final solution is the number is the first cell.
+
+View the code below or download the latest version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem015.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  # Define lattice
+  nLattice <- 20
+  lattice = matrix(ncol = nLattice + 1, nrow = nLattice + 1)
+
+  # Boundary conditions
+  lattice[nLattice + 1,-(nLattice + 1)] <- 1
+  lattice[-(nLattice + 1), nLattice + 1] <- 1
+
+  # Calculate Pathways
+  for (i in nLattice:1) {
+      for (j in nLattice:1) {
+          lattice[i,j] <- lattice[i+1, j] + lattice[i, j+1]
+      }
+  }
+
+  answer <- lattice[1,1]
+#+END_EXAMPLE

@@ -1,0 +1,101 @@
+#+title: Euler Problem 9: Special Pythagorean Triple
+#+date: 2017-01-26 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 9 is about the ancient problem or Pythagorean triples. My
+background is in carpentry and the basic Pythagorean triple 3:4:5 is a
+common tool to check whether an angle is straight. When building a
+structure, simply mark 3 and 4 units of length on the two sides and
+check whether the diagonal is exactly five units to ensure your angles
+are straight. There are, however, an infinite number of triples that
+form right angles.
+
+** Euler Problem 9 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-9-definition
+   :END:
+
+A [[https://en.wikipedia.org/wiki/Pythagorean_triple][Pythagorean
+triple]] is a set of three natural numbers, $latex a < b < c$, for
+which, $latex a^2 + b^2 = c^2$. For example: $latex 3^2 + 4^2 = 9 + 16 =
+25 = 5^2$. There exists exactly one Pythagorean triplet for which $latex
+a + b + c = 1000$. [[https://projecteuler.net/problem=9][Find the
+product]] of /a/, /b/ and /c/.
+
+** Brute Force Solutions
+   :PROPERTIES:
+   :CUSTOM_ID: brute-force-solutions
+   :END:
+
+This solution uses brute force and checks all combinations of /a/, /b/
+and /c/. To limit the solution space I used the fact that /a/ < /b/ <
+/c/, which implies that /a/ < /s//3,  and /a/ < /b/ < /s//2, where /s/
+is the sum of the three sides.
+
+#+BEGIN_EXAMPLE
+  a <- 0
+  b <- 0
+  c <- 0
+  s <- 1000
+  found <- FALSE
+  for (a in 1:floor((s / 3))) {
+      for (b in a:(s / 2)) {
+          c <- s - a - b
+          if (a^2 + b^2 == c^2) {
+              found <- TRUE
+              break
+          }
+      }
+      if (found) break
+  }
+  answer <- a * b * c
+  print(answer)
+
+  # Improved Brute Force
+  a <- 1
+  b <- 499
+  repeat{
+      c <- sqrt(a^2 + b^2) 
+      if (a + b + c > 1000) {b <- b - 1}
+      else if (a + b + c < 1000) {a <- a + 1}
+      else if (a + b + c == 1000) {break}
+  }
+  answer <- a * b * c
+  print(answer)
+#+END_EXAMPLE
+
+** Euclid's Method
+   :PROPERTIES:
+   :CUSTOM_ID: euclids-method
+   :END:
+
+Euclid's formula generates Pythagorean triples for an arbitrary pair of
+integers $latex m$ and $latex n$ with $latex m > n > 0$. The formula
+states that the integers $latex a = m^2 - n^2, b = 2mn, c = m^2 = n^2$
+form a Pythagorean triple. View the code below or download the most
+recent version from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem009.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  abcsum <- 1000
+  x <- abcsum / 2
+  min <- floor(sqrt(x / 2))
+  max <- ceiling(sqrt(x))
+  m <- min:max
+  m <- m[x %% m == 0]
+  n <- ((x / m) - m)
+  a <- 2 * m * n
+  b <- m^2 - n^2
+  c <- m^2 + n^2
+  answer <- a * b * c
+  print(answer)
+#+END_EXAMPLE
+
+#+CAPTION: Scatter plot of the legs (a, b) of the first Pythagorean
+triples with /a/ and /b/ less than 6000. Negative values are included to
+illustrate the parabolic patterns. By Dearjean13
+[[https://creativecommons.org/licenses/by-sa/4.0/][CC BY-SA 4.0]].
+[[/images/blogs.dir/4/files/sites/4/2017/02/Pythagorean_Triples_Scatter_Plot.png]]

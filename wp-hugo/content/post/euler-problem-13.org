@@ -1,0 +1,123 @@
+#+title: Euler Problem 13: Adding a Large Sum of 1000 Digits
+#+date: 2017-02-22 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 13 asks to add one hundred numbers with fifty digits. This
+seems like a simple problem where it not that most computers are not
+designed to deal with numbers with a lot of integers. For example:
+
+$latex 2^{64} = 18446744073709551616$
+
+When asking R to compute this value we get 1.844674e+19, losing most of
+the digits and limiting the accuracy of the results. Computers solve
+this problem using
+[[https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic][Arbitrary-precision
+Arithmetic]]. There are many software libraries that can process long
+integers without loosing accuracy. Euler Problem 13 requires this type
+of approach.
+
+** Euler Problem 13 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-13-definition
+   :END:
+
+Work out the first ten digits of the
+[[https://projecteuler.net/problem=13][sum]] of the following
+one-hundred 50-digit numbers.
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The easy way to solve this problem is to use the
+[[https://cran.r-project.org/web/packages/gmp/index.html][gmp package]]
+for working with very large integers. This package uses a special
+number types such as Big Rational and Big Integer. The number of digits
+in these number types is only limited by the size of the memory.
+
+#+BEGIN_EXAMPLE
+  library(gmp)
+  numbers <- readLines("Euler/p013_numbers.txt")
+  digits <- sum(as.bigz(numbers))
+  answer <- substr(as.character(digits),1,10)
+#+END_EXAMPLE
+
+* Using Base-R
+  :PROPERTIES:
+  :CUSTOM_ID: using-base-r
+  :END:
+
+To find the solution to this problem using only base R, I wrote a
+function to add numbers using strings instead of integers. The function
+adds leading zeros to the smallest number to make them both the same
+length. The function then proceeds to add numbers in the same way we
+were taught in primary school. This function can in principle be used
+for several other Euler Problems using large integers.
+
+#+BEGIN_EXAMPLE
+  big.add <- function(a, b) {
+      # Add leading zeros to smallest numer
+      if (nchar(a) < nchar(b))
+      a <- paste0(paste(rep(0, nchar(b) - nchar(a)), collapse = ""), a) 
+      if (nchar(a) > nchar(b))
+          b <- paste0(paste(rep(0, nchar(a) - nchar(b)), collapse = ""), b)
+      solution <- vector()
+      remainder <- 0
+      for (i in nchar(b):1) {
+          p <- as.numeric(substr(a, i, i))
+          q <- as.numeric(substr(b, i, i))
+          r <- p + q + remainder 
+          if (r >= 10 & i!=1) {
+              solution <- c(solution, r %% 10)
+              remainder <- (r - (r %% 10))/10
+          } else {
+              solution <- c(solution, r)
+              remainder <- 0
+          }
+      }
+  return(paste(rev(solution), collapse = ""))
+  }
+#+END_EXAMPLE
+
+With this function, the problem is easy to solve. The second part of the
+code runs this function over the one hundred numbers provided on the
+Euler Problem page and calculates the answer.
+
+#+BEGIN_EXAMPLE
+  numbers <- readLines("Euler/p013_numbers.txt")
+  for (i in numbers) {
+      answer <- big.add(answer, i)
+  }
+  answer <- substr(answer, 1, 10)
+#+END_EXAMPLE
+
+** Multiplying Big Numbers
+   :PROPERTIES:
+   :CUSTOM_ID: multiplying-big-numbers
+   :END:
+
+You can expand this function to multiply a very large number with a
+smaller number using the Reduce function. This function adds the number
+a to itself, using the =big.add= function. The outcome of the addition
+is used in the next iteration until it has been repeated /b/ times. The
+number b in this function needs to be a 'low' number because it uses a
+vector of the length b.
+
+#+BEGIN_EXAMPLE
+  big.mult <- function(a, b) {
+      Reduce(big.add, rep(a, as.numeric(b)))
+  }
+#+END_EXAMPLE
+
+These base-R solutions for managing very large numbers is reused in the
+solution for [[https://lucidmanager.org/euler-problem-25/][Euler Problem
+25]] that asks for a Fibonacci number with 1000 decimals.
+
+You can download the latest version of this code from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem013.R][GitHub]].
+
+{{< youtube "6bpLYxk9TUQ" >}}

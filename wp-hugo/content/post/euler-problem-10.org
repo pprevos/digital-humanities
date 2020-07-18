@@ -1,0 +1,58 @@
+#+title: Euler Problem 10: Summation of Primes
+#+date: 2017-02-01 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 10 asks for the summation of primes. Computationally this
+is a simple problem because we can re-use the prime sieve developed for
+[[https://lucidmanager.org/euler-problem-3/][Euler Problem 3]]. When
+generating a large number of primes the erratic pattern at which they
+occur is much more interesting than their sum. Mathematicians consider
+primes the basic building blocks of number theory. No matter how hard we
+look, however, they do not seem to obey any logical sequence.\\
+The summing of primes reveals an interesting problem in mathematics.
+[[https://en.wikipedia.org/wiki/Goldbach's_conjecture][Goldbach's
+conjecture]] is one of the oldest and best-known unsolved problems in
+number theory and states that:
+
+#+BEGIN_QUOTE
+  Every even integer greater than 2 can be expressed as the sum of two
+  primes.
+#+END_QUOTE
+
+Note that this conjecture is only about even numbers. Goldbach also
+theorised that every odd composite number can be written as the sum of a
+prime and twice a square.
+
+{{< youtube "_tCZwRuB0Bc" >}}
+
+** Euler Problem 10 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-10-definition
+   :END:
+
+The sum of the primes below 10 is 2 + 3 + 5 + 7 = 17.
+[[https://projecteuler.net/problem=10][Find the sum of all the primes
+below two million]].
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The sieve of Eratosthenes function used in
+[[https://lucidmanager.org/euler-problem-3/][Euler Problem 3]] can be
+reused once again to generate the prime numbers between two and two
+million. An interesting problem occurs when I run the code. When I sum
+all the primes without the =as.numeric= conversion, R throws an integer
+overflow error and recommends the conversion. You can download this code
+from
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem010.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  primes <- esieve(2e6)
+  answer <- (sum(as.numeric(primes)))
+  print(answer)
+#+END_EXAMPLE

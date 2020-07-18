@@ -1,0 +1,139 @@
+#+title: Digital Water Utility Competencies: R for Water Professionals
+#+date: 2019-06-17 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics R-Language
+#+draft: true
+
+The digital water utility is a fashionable catchphrase in the water
+industry. Managing reliable water services requires not only a
+sufficient volume of water but also significant amounts of data. Water
+professionals continuously measure the flow and quality of the water and
+how customers perceive their service. Water professionals analyse this
+data to monitor processes and to decide the appropriate course of
+action. [[https://leanpub.com/c/R4H2O][R for Water professionals]] is an
+online workshop to introduce water engineers, biologists, economists,
+and so on with the principles of using code to create value from data.
+The content of this course is also freely available on
+[[https://github.com/pprevos/r4h2o][GitHub]], including the data and
+scripts used in the case studies.
+
+** Digital Water Utility Competencies
+   :PROPERTIES:
+   :CUSTOM_ID: digital-water-utility-competencies
+   :END:
+
+One of the three main competencies of a data scientist is /domain
+knowledge/. To make sense of what data scientists analyse, they need to
+have subject-matter expertise. A data scientist without this knowledge
+can easily make mistakes because they view their problem as abstract,
+instead of being part of reality.
+
+#+CAPTION: Data science competencies (Based on Conway, 2009).
+[[/images/blogs.dir/9/files/sites/9/2019/05/figure03_Conway.png]]
+
+Data scientists with competencies in all three areas are rare. Some
+people refer to these people as data data science
+[[https://medium.com/@NileshMGupta/becoming-a-data-science-unicorn-879723111d42][unicorns]]
+or
+[[https://thefullstackdatascientist.com/blog/what-is-a-full-stack-data-scientist/][full-stack]]
+data scientists. Most people enter data science from the domains of
+computing or mathematics. For a mathematician or a computer scientist to
+become a domain expert, in this case, a water professional takes several
+years of training and experience. So why not reverse this equation and
+train existing subject-matter experts to learn about writing data
+science code?
+
+/R for Water Professionals/ teaches the basics of using the R language
+to solve water management problems. I developed this course because I
+want to help fellow water professionals to
+[[https://lucidmanager.org/spreadsheets-for-data-science/][ditch the
+spreadsheet]] and write code to analyse data. The objective of this
+course is to give participants a starting point for further self-study.
+To become a digital water utility, water professionals need to develop
+competencies in data science to fully embrace the benefits of
+digitisation.
+
+** Case Study approach
+   :PROPERTIES:
+   :CUSTOM_ID: case-study-approach
+   :END:
+
+This workshop uses a case study approach to introduce participants to
+coding in the R language. Rather than a systematic theoretical approach
+to teach coding, the case studies form a starting point to introduce
+various concepts of writing data science code. Each case study starts
+with a problem statement that participants resolve with R code. The case
+studies relate to water quality data, customer perception and water
+consumption.
+
+Firstly, the workshop introduces the principles of
+[[https://leanpub.com/strategic_data_science][strategic data science]],
+which is an extract from my book on that topic. This session presents a
+framework for best practice in data science:
+
+- /Useful/: Actionable intelligence
+- /Sound/: Valid, reliable and reproducible
+- /Aesthetic/: Interpretable and explainable
+
+*** Case Study 1
+    :PROPERTIES:
+    :CUSTOM_ID: case-study-1
+    :END:
+
+The first case study introduces the participant to the basics of using R
+and Studio by assessing a set of lab results from a water supply network
+against local regulations. Above all, his case study demonstrates the
+importance of sound data science by reviewing the various ways
+[[https://lucidmanager.org/percentile-calculations/][percentiles]] can
+be calculated.
+
+#+CAPTION: Analysing turbidity data in various systems.
+[[/images/blogs.dir/9/files/sites/9/2019/05/turbidity-1024x434.png]]
+
+*** Case Study 2
+    :PROPERTIES:
+    :CUSTOM_ID: case-study-2
+    :END:
+
+The digital water utility is not only about technology. All technology
+is in service of providing a convenient service to consumers. second
+case study looks at the results of a customer survey about their
+[[https://lucidmanager.org/invisible-water-utility/][perception of water
+services]]. This study delves into cleaning data and exploration through
+visualising the data. An
+[[https://lucidmanager.org/measuring-consumer-involvement/][earlier
+article]] on this website showed how to use factor analysis for this
+data.
+
+#+CAPTION: Best practice in data visualisation is to maximise the
+data-to-pixel ratio.
+[[/images/blogs.dir/9/files/sites/9/2019/06/visualisation-1024x569.png]]
+
+*** Case Study 3
+    :PROPERTIES:
+    :CUSTOM_ID: case-study-3
+    :END:
+
+The last case study uses
+[[https://lucidmanager.org/simulating-water-consumption/][simulated
+smart meter data]] to introduces the basics of literate programming to
+develop a report. The assignment for this case study is to report on
+water consumption and find properties with a leak.
+
+#+CAPTION: Diurnal curve from smart water meters.
+[[/images/blogs.dir/9/files/sites/9/2019/05/diurnal_curve-1024x659.png]]
+
+** R for Water Professionals: Developing Digital Water Utility
+Competencies
+   :PROPERTIES:
+   :CUSTOM_ID: r-for-water-professionals-developing-digital-water-utility-competencies
+   :END:
+
+#+CAPTION: *Click the banner to find out more*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]
+
+** Hydroinformatics: Musings about Water Utility Data Science in R
+   :PROPERTIES:
+   :CUSTOM_ID: hydroinformatics-musings-about-water-utility-data-science-in-r
+   :END:

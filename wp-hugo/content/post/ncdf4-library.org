@@ -1,0 +1,150 @@
+#+title: Analysing soil moisture data in NetCDF format with the ncdf4 library
+#+date: 2017-09-07 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Hydroinformatics Map-Porn R-Language
+#+draft: true
+
+The [[http://www.unidata.ucar.edu/software/netcdf/][netCDF]] format is
+popular in sciences that analyse sequential spatial data. It is
+a self-describing, machine-independent data format for creating,
+accessing and sharing array-oriented information. The netCDF format
+provides spatial time-series such as meteorological or environmental
+data. This article shows how to load this type of data with the ncdf4
+library. This article also shows how to visualise and analyse this data
+format by reviewing soil moisture data published by the Australian
+Bureau of Statistics. The latest version of this code is available on my
+[[https://github.com/pprevos/hydroinformatics/tree/master/Catchment/SoilMoisture][GitHub
+repository]]. This article is one of a series on using the R language
+for analysing water data, or
+[[https://lucidmanager.org/hydroinformatics/][hydroinformatics]].
+
+** Soil Moisture data
+   :PROPERTIES:
+   :CUSTOM_ID: soil-moisture-data
+   :END:
+
+The [[http://www.bom.gov.au/water/landscape][Australian Bureau of
+Meteorology]] publishes hydrological data in both a simple map grid and
+in the NetCDF format. The map grid consists of a flat text file that
+requires a bit of data jujitsu before you can use it. The NetCDF format
+is much easier to deploy as it provides a three-dimensional matrix of
+spatial data over time.
+
+We are looking at the possible relationship between sewer main blockages
+and deep soil moisture levels. You will need to manually download this
+dataset from the Bureau of Meteorology website. I have not been able to
+scrape the website automatically. For this analysis, I use the actual
+[[http://www.bom.gov.au/water/landscape/#/sd_pct/Actual/Day/-39.00/130.40/4/Point/Separate/0/0/2017/8/21][deep
+soil moisture]] level, aggregated monthly in NetCDF 4 format.
+
+#+CAPTION: Australian Landscape Water Balance (Bureau of Meteorology).
+[[/images/blogs.dir/4/files/sites/4/2017/12/sd_avg.png]]
+
+** Reading, Extracting and Transforming the netCDF format with ncdf4
+   :PROPERTIES:
+   :CUSTOM_ID: reading-extracting-and-transforming-the-netcdf-format-with-ncdf4
+   :END:
+
+The ncdf4 library, developed by David W. Pierce, provides the
+necessary functionality to manage this data. The first step is to load
+the data, extract the relevant information and transform the data for
+visualisation and analysis. When the data is read, it essentially forms
+a complex list that contains the metadata and the measurements.
+
+The =ncvar_get= function extracts the data from the list. The lon, lat
+and dates variables are the dimensions of the moisture data. The time
+data is stored as the number of days since 1 January 1900. The spatial
+coordinates are stored in decimal degrees with 0.05-decimal degree
+intervals. The moisture data is a three-dimensional matrix with
+longitue, latitude and time as dimensions. Storing this data in this way
+will make it very easy to use.
+
+#+BEGIN_EXAMPLE
+  library(ncdf4)
+  bom <- nc_open("SoilMoisture/sd_pct_Actual_month.nc")
+  print(bom) # Inspect the data
+  lon <- ncvar_get(bom, "longitude")
+  lat <- ncvar_get(bom, "latitude")
+  t <- as.Date("1900-01-01") + ncvar_get(bom, "time")
+  moisture <- ncvar_get(bom, "sd_pct")
+  dimnames(moisture) <- list(lon, lat, t)
+#+END_EXAMPLE
+
+** Visualising the data with ggplot
+   :PROPERTIES:
+   :CUSTOM_ID: visualising-the-data-with-ggplot
+   :END:
+
+The first step is to check the overall data. This first code snippet
+extracts a matrix from the cube for 31 July 2017 and plots it. This code
+pipe extracts the date for the end of July 2017 and creates a data
+frame. Although I use the Tidyverse, I still need reshape2 because the
+gather function does not like matrices.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(RColorBrewer)
+  library(reshape2)
+
+  d <- "2017-07-31"
+  m <- moisture[, , which(t == d)] %>%
+      melt(varnames = c("lon", "lat")) %>%
+      subset(!is.na(value))
+
+  ggplot(m, aes(x = lon, y = lat, fill = value)) + 
+      borders("world") +
+      geom_tile() +
+      scale_fill_gradientn(colors = brewer.pal(9, "Blues")) +
+      labs(title = "Total moisture in deep soil layer (100-500 cm)",
+           subtitle = format(as.Date(d), "%d %B %Y")) +
+      xlim(range(lon)) + 
+      ylim(range(lat)) + 
+      coord_fixed()
+#+END_EXAMPLE
+
+#+CAPTION: Deep soil moisture: Source Bureau of Meteorology, Australia
+[[/images/blogs.dir/4/files/sites/4/2017/08/Moisture_Australia.png]]
+
+With the ggmap package we can create a nice map of a local area.
+
+#+BEGIN_EXAMPLE
+  library(ggmap)
+  loc <- round(geocode("Bendigo") / 0.05) * 0.05 
+  get_map(loc, zoom = 12) %>%
+      ggmap() +
+          geom_tile(data = m, aes(x = lon, y = lat, fill = value), alpha = 0.5) +
+          scale_fill_gradientn(colors = brewer.pal(9, "Blues")) +
+          labs(title = "Total moisture in deep soil layer (100-500 cm)",
+               subtitle = format(as.Date(d), "%d %B %Y"))
+#+END_EXAMPLE
+
+[[/images/blogs.dir/4/files/sites/4/2017/08/Bendigo_July2017.png]]
+
+** Analysing the data
+   :PROPERTIES:
+   :CUSTOM_ID: analysing-the-data
+   :END:
+
+For my analysis, I am interested in the time series of moisture data for
+a specific point on the map. The previous code slices the data
+horizontally over time. To create a time series we can pierce through
+the data for a specific coordinate. The purpose of this time series is
+to investigate the relationship between sewer main blockages and deep
+soil data, which can be a topic for a future post.
+
+#+CAPTION: Soil moisture time series for Bendigo.
+[[/images/blogs.dir/4/files/sites/4/2017/09/Bendigo_TimeSeries.png]]
+
+#+BEGIN_EXAMPLE
+  mt <- data.frame(date = t,
+  dp = moisture[as.character(loc$lon), as.character(loc$lat), ])
+  ggplot(mt, aes(x = t, y = dp)) + geom_line() +
+      labs(x = "Month",
+           y = "Moisture",
+           title = "Total moisture in deep soil layer (100-500 cm)",
+           subtitle = paste(as.character(loc), collapse = ", "))
+#+END_EXAMPLE
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

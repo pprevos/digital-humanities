@@ -1,0 +1,101 @@
+#+title: Mapping antipodes using the ggmap package
+#+date: 2017-01-20 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: geocode Map-Porn R-Language
+#+draft: true
+
+When I was a kid, I was was fascinated by the conundrum of what happens
+when you drill a hole straight through the centre of the earth. I always
+believed that I would turn up in Australia. But is this really the case?
+
+The antipodes of any place on earth is the place that is diametrically
+opposite to it. A pair of antipodes are connected by a straight line
+running through the centre of the Earth. These points are as far away
+from each other as is possible on this planet. Two people are antipodes
+when they live on opposite sides of the globe. Their feet (πούς/pous in
+Ancient Greek) are directly opposite each other.
+
+How can we use coding in R to solve this conundrum?
+
+** Mapping antipodes with ggmap
+   :PROPERTIES:
+   :CUSTOM_ID: mapping-antipodes-with-ggmap
+   :END:
+
+We can roughly recreate the antipodean map on Wikipedia with
+the [[https://cran.r-project.org/web/packages/globe/][/globe/ package]].
+This package, written by Adrian Baddeley, plots 2D and 3D views of the
+earth. The package contains a data file with major coastlines that can
+be used to create a flipped map of the world.
+
+The package contains a data file with major coastlines that can be used
+to create a flipped map of the world. To turn a spatial location into
+its antipode you subtract 180 degrees from the longitude and reverse the
+sign of the latitude, shown below.
+
+#+CAPTION: Antipodean globe.
+[[/images/blogs.dir/4/files/sites/4/2017/01/antipodes.png]]
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  ## Antipodean globe
+  world <- map_data("world")
+  anti_world <- world %>%
+      mutate(long = long - 180,
+             lat = - lat)           
+  ggplot() +
+      geom_polygon(data = world,  aes(long, lat, group = group), fill = "grey") +
+      geom_polygon(data = anti_world, aes(long, lat, group = group),
+                   fill = "blue", alpha = 0.2) + 
+      coord_map("ortho", orientation = c(0, 100, 00)) +
+      theme_void()
+#+END_EXAMPLE
+
+We can also use
+the[[https://cran.r-project.org/web/packages/ggmap/index.html][ ggmap package]]
+to visualise antipodes. This package, developed by David Kahle
+antipodean R-guru Hadley Wickham, has a neat geocoding function to
+obtain a spatial location. You will need a Google API to enable the
+[[https://lucidmanager.org/geocoding-with-ggmap/][geocoding function]].
+
+The antipode function takes the description of a location and a zoom
+level to plot a dot on the antipode location. The gridExtra package is
+used to create a faceted map, which is not otherwise possible in ggmap.
+
+#+BEGIN_EXAMPLE
+  library(gridExtra)
+  library(ggmap)
+  api <- readLines("google.api") # Text file with the API key
+  register_google(key = api)
+  ## Antipode function
+  antipode <- function(location, zm = 6) {
+      # Map location
+      lonlat <- geocode(location)
+      loc1 <- get_map(lonlat, zoom = zm)
+      map1 <- ggmap(loc1) +
+          geom_point(data = lonlat, aes(lon, lat, col = "red", size = 10)) + 
+          theme(legend.position = "none")
+      # Define antipode
+      lonlat$lon <- lonlat$lon-180
+      if (lonlat$lon < -180) 
+          lonlat$lon <- 360 + lonlat$lon
+      lonlat$lat <- -lonlat$lat
+      loc2 <- get_map(lonlat, zoom = zm)
+      map2 <- ggmap(loc2) +
+          geom_point(data = lonlat, aes(lon, lat, col = "red", size = 10)) + 
+          theme(legend.position = "none")
+      grid.arrange(map1, map2, nrow = 1)
+  }
+
+  antipode("Rector Nelissenstraat 47 Hoensbroek", 4)
+#+END_EXAMPLE
+
+This code solves the problem I was thinking about as a child. Running
+the code shows that the antipodes location of the home I grew up in is
+not in Australia, but quite a way south of New Zealand. Another
+childhood fantasy shattered ... You can also view this code
+on [[https://github.com/pprevos/geography/blob/master/antipodes.R][GitHub]].
+
+#+CAPTION: Antipode map of my birthplace, Hoensbroek, the Netherlands.
+[[/images/blogs.dir/4/files/sites/4/2017/01/AntipodeHoensbroek.jpg]]

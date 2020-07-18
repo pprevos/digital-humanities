@@ -1,0 +1,112 @@
+#+title: Data Pseudo-Science: Developing a Biorhythm Calculator
+#+date: 2017-03-29 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Machine-Learning R-Language
+#+draft: true
+
+Data science is a serious occupation. Just like any other science,
+however, it can also be used for spurious topics, such as calculating
+your biorhythm. This article provides an example of data Pseudo-Science
+though a function that calculates and visualises your
+[[https://en.wikipedia.org/wiki/Biorhythm][biorhythm]]. Based on the
+graph, I must be having a great day right now.
+
+The broader and more pertinent message in this post is that data
+pseudo-science is more common than you would think. Is our belief in
+machine learning justified or are some of these models also a
+pseudo-science with not much more reliability than a biorhythm?
+
+** Biorhythm Theory
+   :PROPERTIES:
+   :CUSTOM_ID: biorhythm-theory
+   :END:
+
+The idea that our physical states follow a predetermined rhythm has been
+around as long as mathematics. The basic concept of biorhythm is that a
+regular sinusoid cycle accurately describes our physical, emotional and
+intellectual states. Each of these three cycles has a different
+wavelength ($latex w$):
+
+- physical: $latex w = 23$ days
+- emotional: $latex w = 28$ days
+- intellectual: $latex w = 33$ days
+
+The cycle is calculated with $latex \sin (2 \pi t / w)$, where $latex t$
+indicates the number of days since birth. This idea was developed by
+German surgeon Wilhelm Fliess in the late 19^{th} century and was
+popularised in the United States in the late 1970s. There is no
+scientific evidence of the validity of this theory, but it is an
+entertaining way to play with data.
+
+The combination of the 23- and 28-day cycles repeats every 644 days,
+while the triple combination of 23-, 28-, and 33-day cycles repeat every
+21,252 days, 58 years, two months and three weeks. You can, by the way,
+never reach a point where all cycles are maximised. The best you can
+achieve is 299.7 out of a maximum 300 which occurs when you are 17,003
+days old.
+
+** Calculating your Biorhythm
+   :PROPERTIES:
+   :CUSTOM_ID: calculating-your-biorhythm
+   :END:
+
+When I was a teenager in the 1980s, several books and
+[[http://www.atarimagazines.com/v6n9/Biorhythms.html][magazines]]
+described computer code to calculate your biorhythm. I used to play with
+these functions on my
+[[https://en.wikipedia.org/wiki/Atari_8-bit_family][Atari 130XE]]
+computer.
+
+Building a biorhythm calculator in R is easy. This function takes two
+dates as input and plots the biorhythm for the two weeks before and
+after the date. To calculate your biorhythm, run the function with your
+date of birth and target date: =biorhythm("yyyy-mm-dd")=. The default
+version uses today as the target. You can download the latest version of
+this code on
+[[https://github.com/pprevos/r.prevos.net/blob/master/Miscellaneous/biorhythm.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  library(ggplot2)
+  library(reshape2)
+  biorhythm <- function(dob, target = Sys.Date()) {
+      dob <- as.Date(dob)
+      target <- as.Date(target)
+      t <- round(as.numeric(difftime(target, dob)))
+      days <- (t - 14) : (t + 14)
+      period <- data.frame(Date = seq.Date(from = target - 15, by = 1, length.out = 29),
+                           Physical = sin (2 * pi * days / 23) * 100,
+                           Emotional = sin (2 * pi * days / 28) * 100,
+                           Intellectual = sin (2 * pi * days / 33) * 100)
+  period <- melt(period, id.vars = "Date", variable.name = "Biorhythm", value.name = "Percentage")
+  ggplot(period, aes(x = Date, y = Percentage, col = Biorhythm)) + geom_line() +
+      ggtitle(paste("DoB:", format(dob, "%d %B %Y"))) +
+      geom_vline(xintercept = as.numeric(target))
+  }
+  biorhythm("1969-09-12", "2017-03-30")
+#+END_EXAMPLE
+
+[[/images/blogs.dir/4/files/sites/4/2017/03/biorhythm.png]]
+
+** Data Pseudo-Science
+   :PROPERTIES:
+   :CUSTOM_ID: data-pseudo-science
+   :END:
+
+Biorhythms are an early attempt for human beings to predict the future.
+Although there is no relationship between this algorithm and reality,
+many people believed in its efficacy. Does the same hold true for the
+hyped capabilities of machine learning?
+
+Data pseudo-science is not only an issue when people use spurious
+mathematical relationships such as biorhythms or astrology. This post is
+also written as a warning not to solely rely on numerical models to
+predict qualitative aspects of life.
+
+The recent failures in predicting the results of elections, even days
+before the event, are a case in point. There are many
+[[https://www.analyticsvidhya.com/blog/2016/05/8-reasons-analytics-machine-learning-models-fail-deployed/][reasons
+machine learning methods can go wrong]]. When machine learning
+algorithms fail, they are often just as useful as a biorhythm. It would
+be fun to write a predictive analysis package for R using only
+pseudoscientific approaches such as I-Ching, astrology or biorhythm.

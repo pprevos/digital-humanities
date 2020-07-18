@@ -1,0 +1,85 @@
+#+title: Writing Academic Articles using R Sweave and LaTeX
+#+date: 2017-10-04 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Productivity R-Language
+#+draft: true
+
+One of my favourite activities in R is using Markdown to create business
+reports. Most of my work I export to MS Word to communicate analytical
+results with my colleagues. For my academic work and eBooks, I prefer
+LaTeX to produce great typography. This article explains how to write
+academic articles and essays combining R Sweave and LaTeX. The article
+is formatted in accordance with the APA (American Psychological
+Association) requirements.
+
+To illustrate the principles of using R Sweave and LaTeX, I recycled an
+essay about problems with body image that I wrote for a psychology
+course many years ago. You can find the completed paper and all the
+necessary files on my
+[[https://github.com/pprevos/r.prevos.net/tree/master/Miscellaneous/BodyImage][GitHub
+repository]].
+
+In another post, I have outlined how to achieve the same result using
+[[https://lucidmanager.org/using-r-with-emacs/][Emacs and Org Mode]] to
+write academic articles.
+
+** Body Image
+   :PROPERTIES:
+   :CUSTOM_ID: body-image
+   :END:
+
+Body image describes the way we feel about the shape of our body. The
+literature on this topic demonstrates that many people, especially young
+women, struggle with their body image. A negative body image has been
+strongly associated with eating disorders. Psychologists measure body
+image using a special scale, shown in the image below.
+
+My paper measures the current and ideal body shape of the subject and
+the body shape of the most attractive other sex. The results confirm
+previous research which found that body dissatisfaction for females is
+significantly higher than for men. The research also found a mild
+positive correlation between age and ideal body shape for women and
+between age and the female body shape found most attractive by men. You
+can read the full paper on my other
+[[https://prevos.net/humanities/psychology/body-image/][website]].
+
+#+CAPTION: Body shape measurement scale.
+[[/images/blogs.dir/4/files/sites/4/2017/10/BodyScale.png]]
+
+** R Sweave and LaTeX
+   :PROPERTIES:
+   :CUSTOM_ID: r-sweave-and-latex
+   :END:
+
+The R file for this essay uses the Sweave package to integrate R code
+with LaTeX. The first two code chunks create a table to summarise the
+respondents using the
+[[https://cran.r-project.org/web/packages/xtable/index.html][xtable]]
+package. This package creates LaTeX or HTML tables from data generated
+by R code.
+
+The first lines of the code read and prepare the data, while the second
+set of lines creates a table in LaTeX code. The code chunk uses
+=results=tex= to ensure the output is interpreted as LaTeX. This
+approach is used in most of the other chunks. The image is created
+within the document and saved as a pdf file and back integrated into the
+document as an image with an appropriate label and caption.
+
+View the
+[[https://github.com/pprevos/r.prevos.net/blob/master/Miscellaneous/BodyImage/BodyImage.Rnw][Rnw
+file]] on my GitHub repository to see the full code.
+
+** Configuration
+   :PROPERTIES:
+   :CUSTOM_ID: configuration
+   :END:
+
+I created this file in R Studio, using the
+[[https://support.rstudio.com/hc/en-us/articles/200552056-Using-Sweave-and-knitr][Sweave
+and]] knitr functionality. To knit the R Sweave file for this paper you
+will need to install the [[https://ctan.org/pkg/apa6][apa6]] and
+[[https://ctan.org/pkg/ccicons?lang=en][ccicons]] packages in your LaTeX
+distribution. The apa6 package provides macros to format papers in
+accordance with the requirements of the American Psychological
+Association.

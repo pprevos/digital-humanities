@@ -1,0 +1,246 @@
+#+title: Tap Water Sentiment Analysis using Tidytext
+#+date: 2018-03-28 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Digital-Humanities Hydroinformatics R-Language
+#+draft: true
+
+In developed countries, tap water is safe to drink and available for a
+meagre price. Despite the fact that high-quality drinking water is
+almost freely available, the consumption of bottled water is increasing
+every year. Bottled water companies use sophisticated marketing
+strategies, while water utilities are mostly passive providers of public
+service. Australian marketing expert Russell Howcroft even called water
+utilities "lazy marketers". Can we use sentiment analysis to find out
+more about how people feel about tap water. What can we learn about the
+reasons behind this loss in trust in the municipal water supply?
+
+{{< youtube "Cg9YH4bm2Sk" >}}
+
+Gruen Transfer (2009).
+
+This tap water sentiment analysis estimates the attitudes people have
+towards tap water by analysing tweets. This article explains how to
+examine tweets about tap water using the R language and the
+[[https://www.tidytextmining.com/sentiment.html][Tidytext package]]. The
+most recent version of the code and the raw data set can be viewed on my
+[[https://github.com/pprevos/hydroinformatics/tree/master/Customers][GitHub
+page]].
+
+** Sentiment Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: sentiment-analysis
+   :END:
+
+Sentiment provides an indication of the perception a group of people has
+about a certain topic. Traditionally, assessing the sentiment of a group
+of people requires surveys or interviews. These methods are problematic
+because it creates an artificial environment where the respondent often
+answers to meet the perceived expectations of the survey, or customers
+exaggerate to get their point across. Using sentiment analysis of
+ego-documents written by consumers can overcome these problems.
+Ego-documents, i.e. forms of personal writing, are a more direct way to
+find out what consumers think, but they are not easy to obtain and
+analyse.
+
+With the advent of social media, access to ego documents has become much
+simpler and many tools exist to collect and interpret this data. Using
+ego-documents brings you closer to the consumer than can be possible
+with surveys or focus groups. One medium gaining popularity with market
+researchers is [[http://twitter.com/][Twitter]].
+
+** Tap Water Sentiment Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: tap-water-sentiment-analysis
+   :END:
+
+Each tweet that contains the words "tap water" contains a message about
+the attitude the author has towards that topic. Each text expresses a
+sentiment about the topic it describes.
+[[https://en.wikipedia.org/wiki/Sentiment_analysis][Sentiment analysis]]
+is a data science technique that extracts subjective information from a
+text. The basic method compares a string of words with a set of words
+with calibrated sentiments. These calibrated sets are created by asking
+many people how they feel about a certain word. For example, the word
+"stink" expresses a negative sentiment, while the word "nice" would be a
+positive sentiment.
+
+This tap water sentiment analysis consists of three steps. The first
+step extracts 1000 tweets that contain the words "tap water" from
+Twitter. The second step cleans the data, and the third step undertakes
+the analysis visualises the results.
+
+The [[https://sites.google.com/view/watercoinzerocom/home][Water Data
+Aggregator]] is a commercial application of sentiment analysis for tap
+water. This website sells the regional social credit score to interested
+parties.
+
+** Extracting tweets using the TwitteR package
+   :PROPERTIES:
+   :CUSTOM_ID: extracting-tweets-using-the-twitter-package
+   :END:
+
+The
+[[https://cran.r-project.org/web/packages/twitteR/index.html][TwitteR
+package]] by Geoff Gentry makes it very easy to retrieve tweets using
+search criteria. You will need to create an API on Twitter to receive
+the keys and tokens. In the code below, the actual values have been
+removed. Follow the instructions in
+[[https://www.r-bloggers.com/setting-up-the-twitter-r-package-for-text-analytics/][this
+article]] to obtain these codes for yourself. This code snippet calls a
+private file to load the API codes, extracts the tweets and creates a
+data frame with a tweet id number and its text.
+
+#+BEGIN_EXAMPLE
+  library(tidyverse)
+  library(tidytext)
+  library(twitteR)
+
+  source("twitteR_API.R")
+  setup_twitter_oauth(api_key, api_secret, token, token_secret)
+
+  tapwater_tweets <- searchTwitter("tap water", n = 1000, lang = "en") %>%
+    twListToDF() %>%
+    select(id, text)
+  tapwater_tweets <- subset(tapwater_tweets, !duplicated(tapwater_tweets$text))
+  tapwater_tweets$text <- gsub("’", "'", tapwater_tweets$text)
+
+  write_csv(tapwater_tweets, "Hydroinformatics/tapwater_tweets.csv")
+#+END_EXAMPLE
+
+When I first extracted these tweets, a tweet by CNN about
+[[https://edition.cnn.com/2018/03/30/health/kentucky-water-crisis/index.html][tap
+water in Kentucky that smells like diesel]] was retweeted many times, so
+I removed all duplicate tweets from the set. Unfortunately, this left
+less than 300 original tweets in the corpus.
+
+https://twitter.com/CNN/status/979946657101045760
+
+** Sentiment analysis with Tidytext
+   :PROPERTIES:
+   :CUSTOM_ID: sentiment-analysis-with-tidytext
+   :END:
+
+Text analysis can be a powerful tool to help to analyse large amounts of
+text. The R language has an extensive range of packages to help you
+undertake such a task. The [[https://www.tidytextmining.com/][Tidytext]]
+package extends the [[http://vita.had.co.nz/papers/tidy-data.html][Tidy
+Data]] logic promoted by Hadley Wickham and his Tidyverse software
+collection.
+
+*** Data Cleaning
+    :PROPERTIES:
+    :CUSTOM_ID: data-cleaning
+    :END:
+
+The first step in cleaning the data is to create unigrams, which
+involves splitting the tweets into individual words that can be
+analysed. The first step is to look at which words are most commonly
+used in the tap water tweets and visualise the result. The most common
+words related to drinking the water and to bottled water, which makes
+sense. Also the recent issues in Kentucky feature in this list.
+
+#+CAPTION: Most common words in tweets about tap water.
+[[/images/blogs.dir/4/files/sites/4/2018/04/tapwater_words.png]]
+
+#+BEGIN_EXAMPLE
+  tidy_tweets <- tapwater_tweets %>%
+    unnest_tokens(word, text)
+
+  data(stop_words)
+  tidy_tweets <- tidy_tweets %>%
+    anti_join(stop_words) %>%
+      filter(!word %in% c("tap", "water", "rt", "https", "t.co", "gt", "amp",
+                          as.character(0:9)))
+
+  tidy_tweets %>%
+    count(word, sort = TRUE) %>%
+    filter(n > 5) %>%
+    mutate(word = reorder(word, n)) %>%
+    ggplot(aes(word, n)) + geom_col(fill = "dodgerblue4") +
+      xlab(NULL) + coord_flip() +
+      ggtitle("Most common words in tap water tweets")
+#+END_EXAMPLE
+
+*** Sentiment Analysis
+    :PROPERTIES:
+    :CUSTOM_ID: sentiment-analysis-1
+    :END:
+
+The Tidytext package contains three lexicons of thousands of single
+English words (unigrams) that were manually assessed for their
+sentiment. The principle of the sentiment analysis is to compare the
+words in the text with the words in the lexicon and analyse the results.
+For example, the statement: "This tap water tastes horrible" has a
+sentiment score of -3 in the AFFIN system
+by [[http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6010][Finn
+Årup Nielsen]] due to the word "horrible". In this analysis, I have used
+the "bing" method published by
+[[https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html][Liu et al.
+in 2005]]. This method simply assigns a word to either positive,
+negative or neutral sentiment.
+
+This method is certainly not fool proof as words with the same spelling
+can mean different things. For example, the phrase: "This tap water
+contains too much lead" will be assess as a positive sentiment because
+the verb lead is seen as positive. The noun lead has no sentiment as it
+depends on context.
+
+The other problem with sentiment analysis is that we tend to only see
+negative commentary. Very few people ever contact a water utility about
+the great morning shower or wonderful glass of water. Tap water resides
+in the background of everyday life and people don't have any opinion
+about it unless it is not available or does not meet their aesthetic
+expectations.
+
+This tap water sentiment analysis shows that two-thirds of the words
+that express a sentiment were negative. The most common negative words
+were "smells" and "scared". This analysis is not a positive result for
+water utilities. Unfortunately, most tweets were not spatially located
+so I couldn't determine the origin of the sentiment.
+
+#+CAPTION: Tap water sentiment analysis.
+[[/images/blogs.dir/4/files/sites/4/2018/04/tapwater_sentiment.png]]
+
+#+BEGIN_EXAMPLE
+  sentiment_bing <- tidy_tweets %>%
+    inner_join(get_sentiments("bing"))
+  sentiment_bing %>%
+    summarise(Negative = sum(sentiment == "negative"), 
+              positive = sum(sentiment == "positive"))
+  sentiment_bing %>%
+    group_by(sentiment) %>%
+    count(word, sort = TRUE) %>%
+    filter(n >= 2) %>%
+    ggplot(aes(word, n, fill = sentiment)) + geom_col(show.legend = FALSE) + 
+      coord_flip() + facet_wrap(~sentiment, scales = "free_y") + 
+      ggtitle("Contribution to sentiment") + xlab(NULL) + ylab(NULL)
+#+END_EXAMPLE
+
+** Using Tap Water Sentiment Analysis
+   :PROPERTIES:
+   :CUSTOM_ID: using-tap-water-sentiment-analysis
+   :END:
+
+Sentiment analysis is an interesting exploration technique, but it is
+not an absolute truth. This method is not able to detect sarcasm or
+irony, and words don't always have the same meaning as described in the
+dictionary. For example, the algorithm interprets the word "lead" as
+positive sentiment in its function as a verb. In water, however, the
+chemical lead is never a positive sentiment. Interpreting tweets as bags
+of words is interesting, but can lead to misunderstanding of the
+context.
+
+The important message for water utilities is that they need to start
+taking the aesthetic properties of tap water as serious as the health
+parameters. A lack of trust will drive consumers to bottled water, or
+less healthy alternatives such as soft drinks are alternative water
+sources.
+
+If you like to know more about customer perceptions of tap water, then
+read my book /Customer Experience Management for Water Utilities/ by
+[[https://www.iwapublishing.com/books/9781780408668/customer-experience-management-water-utilities-marketing-urban-water-supply][IWA
+Publishing]].
+
+#+CAPTION: *LEARN MORE ABOUT R FOR WATER PROFESSIONALS HERE!*
+[[/images/blogs.dir/9/files/sites/9/2019/11/9-1024x512.png]]

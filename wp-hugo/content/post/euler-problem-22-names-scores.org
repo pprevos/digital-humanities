@@ -1,0 +1,98 @@
+#+title: Euler Problem 22 : Names Scores
+#+date: 2017-05-24 10:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler problem 22 is another trivial one that takes us to the realm
+of [[https://en.wikipedia.org/wiki/ASCII][ASCII]] codes. ASCII is a
+method to convert symbols into numbers, originally invented for
+telegraphs. Back in the 8-bit days,
+[[https://en.wikipedia.org/wiki/ASCII_art][ASCII art]] was a method to
+create images without using lots of memory. Each image consists of a
+collection of text characters that give the illusion of an image. Euler
+problem 22 is, unfortunately, a bit less poetic. This problem is similar
+to
+[[https://lucidmanager.org/euler-problem-17-number-letter-counts/][Euler
+problem 17]] that asks to count the length of words expressing numbers.
+
+** Euler Problem 22 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-22-definition
+   :END:
+
+Using
+[[https://projecteuler.net/project/resources/p022_names.txt][names.txt]],
+a 46K text file containing over five-thousand first names, begin by
+sorting it into alphabetical order. Then working out the alphabetical
+value for each name, multiply this value by its alphabetical position in
+the list to obtain a name score.
+
+For example, when the list is sorted into alphabetical order, COLIN,
+which is worth 3 + 15 + 12 + 9 + 14 = 53, is the 938^{th} name in the
+list. So, COLIN would obtain a score of 938 × 53 = 49,714.
+
+[[https://projecteuler.net/problem=22][What is the total]] of all the
+name scores in the file?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+This code reads and cleans the file and sorts the names
+alphabetically. The
+[[https://stat.ethz.ch/R-manual/R-devel/library/base/html/rawConversion.html][charToRaw]]
+function determines the numerical value of each character in each name.
+This output of this function is the hex [[http://ascii.cl/][ASCII code]]
+for each character. The letter A is number 65, so we subtract 64 from
+each value to get the sum total.
+
+#+BEGIN_EXAMPLE
+  names <- readLines("https://projecteuler.net/project/resources/p022_names.txt",
+                     warn =FALSE)
+  names <- unlist(strsplit(names, ","))
+  names <- gsub("[[:punct:]]", "", names)
+  names <- sort(names)
+
+  # Total Name scores
+  answer <- 0
+  for (i in names) {
+      value <- sum(sapply(unlist(strsplit(i, "")),
+                   function(x) as.numeric(charToRaw(x)) - 64))
+      value <- value * which(names==i)
+      answer <- answer + value
+  }
+  print(answer)
+#+END_EXAMPLE
+
+We can have a bit more fun with this problem by comparing this list with
+the [[https://www.babycenter.com/top-baby-names-2016.htm][most popular
+baby names in 2016]]. The first section of the code extracts the list of
+popular names from the website. The rest of the code counts the number
+of matches between the lists and shows the popular baby names not
+present in the Project Euler list.
+
+#+BEGIN_EXAMPLE
+  library(rvest)
+  url <- "https://www.babycenter.com/top-baby-names-2016.htm"
+  babynames <- url %>%
+      read_html() %>%
+      html_nodes(xpath = '//*[@id="babyNameList"]/table') %>%
+      html_table()
+  babynames <- babynames[[1]]
+
+  # Convert Project Euler list and test for matches
+  proper <- function(x) paste0(toupper(substr(x, 1, 1)), tolower(substring(x, 2)))
+  names <- proper(names)
+
+  sum(babynames$GIRLS %in% names)
+  sum(babynames$BOYS %in% names)
+
+  babynames$GIRLS[!(babynames$GIRLS %in% names)]
+  babynames$BOYS[!(babynames$BOYS %in% names)]
+#+END_EXAMPLE
+
+You can download the latest version of this code on
+[[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem022.R][GitHub]].

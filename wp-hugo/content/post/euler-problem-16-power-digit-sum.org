@@ -1,0 +1,70 @@
+#+title: Euler Problem 16: Power Digit Sum
+#+date: 2017-03-15 11:00:00
+#+lastmod: 2020-07-18
+#+categories[]: The-Devil-is-in-the-Data
+#+tags[]: Project-Euler-Solutions-in-R R-Language
+#+draft: true
+
+Euler Problem 16 is reminiscent of the famous
+[[http://trailblazernetizens.blogspot.com.au/2015/08/the-amazing-chessboard-theory.html][fable
+of wheat and chess]]. Lahur Sessa invented the game of chess for
+King Iadava. The king was delighted with the game and asked Lahur to
+name his reward. Lahur asked the king to place one grain of rice on the
+first square of a chessboard, two on the next square, four on the third
+square and so on until the board is filled.
+
+The king was happy with his humble request until his mathematicians
+worked out that it would take millions of tonnes of grain. Assuming
+there are 25 grains of wheat in a gramme, the last field will contain
+more than 461,168,602,000 tonnes of grain.
+
+** Euler Problem 16 Definition
+   :PROPERTIES:
+   :CUSTOM_ID: euler-problem-16-definition
+   :END:
+
+$latex 2^{15} = 32768$ and the sum of its digits is $latex 3 + 2 + 7 + 6
++ 8 = 26$. What is the sum of the digits of the number $latex 2^{1000}$?
+
+** Solution
+   :PROPERTIES:
+   :CUSTOM_ID: solution
+   :END:
+
+The most straightforward solution uses the
+[[https://cran.r-project.org/web/packages/gmp/index.html][GMP]] package
+for Multiple Precision Arithmetic to calculate big integers. The as.bigz
+function results in a special class of arbitrarily large integer
+numbers.
+
+#+BEGIN_EXAMPLE
+  library(gmp)
+  digits <- as.bigz(2^1000) # Define number
+  answer <- sum(as.numeric(unlist(strsplit(as.character(digits), &quot;&quot;))))
+  print(answer)
+#+END_EXAMPLE
+
+We can also solve this problem in base-R with the =bigg.add=
+function which I developed
+for [[https://lucidmanager.org/euler-problem-13/][Euler Problem 13]].
+This function uses basic string operations to add to arbitrarily large
+numbers. Raising a number to the power of two can also be written as a
+series of additions:
+
+$latex 2^4 = 2 \times 2 \times 2 \times 2 = ((2+2)+(2+2))
++ ((2+2)+(2+2))$
+
+The solution to this problem is to add 2 + 2 then add the outcome of
+that equation to itself, and so on. Repeat this one thousand times to
+raise the number two to the power of one thousand.
+
+You can view the code below or download the latest version
+from [[https://github.com/pprevos/ProjectEuler/blob/master/solutions/problem016.R][GitHub]].
+
+#+BEGIN_EXAMPLE
+  pow <- 2
+  for (i in 2:1000)
+      pow <- big.add(pow, pow)
+  answer <- sum(as.numeric(unlist(strsplit(pow, ""))))
+  print(answer)
+#+END_EXAMPLE
