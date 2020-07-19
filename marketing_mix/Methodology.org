@@ -1,0 +1,181 @@
+#+title: "IWA Journals Content Analysis"
+#+author: Peter Prevos
+#+PROPERTY: header-args:R :session R
+
+* Introduction
+This report presents a content analysis of water utility industry literature, following a grounded theory-based methodology proposed by Wolfswinkel et al. (2011), combined with network analysis and community identification.
+** Define
+*** Define the criteria for inclusion/exclusion
+This investigation analyses industry publications on water utility management. Industry publications were chosen because they provide an insight into activities in this industry.
+*** Identify the fields of research
+The field of research is marketing, which for the purpose of this review is defined as viewing an organisation from the customer's perspective. Although most articles are not written with marketing in mind, they can nevertheless be reviewed from a marketing perspective. Product quality, customer perceptions, pricing, distributions systems are topic regularly discussed within the industry.
+*** Determine the appropriate sources
+The IWA publishes 13 English language peer reviewed Journals, all of which were included in this review.
+*** Decide on the specific search terms
+The following search terms were used: marketing, customer and consumer.
+- /Marketing/ was chosen to test for specific reference to the discipline.
+- /Customer/ and /Consumer/ where chosen to obtain articles that mention customers.
+
+Inclusion of these terms in the abstracts of these articles implies salience of the term. Other articles use different labels to denote customers, such as /household/, /public/ and /community/.
+** Search
+#+BEGIN_SRC R :results silent
+library(tidyverse)
+searches <- read_csv("IWA_Searches.csv")
+#+END_SRC
+
+The [[https://iwaponline.com/][IWA journal database]] was searched in 2016 for entries that contained one or more of the search terms in either title or abstract of the article. Entries for the /Water Research/ journal were searched in the /Science Direct/ database. This resulted in a total of src_R{nrow(searches)} entries, of which src_R{sum(duplicated(searches$Result))} entries contained more than one keyword.
+** Select
+*** Refine the sample
+All entries were entered into a spreadsheet. The results were screened to assess their suitability for analysis. Unsuitable entries were removed for three reasons:
+- References to pages without journal article abstract. e.g.. journal table of contents and magazine articles.
+- Foreign language articles
+- Content not related to the retail of tap water e.g. bottled water, sanitation, agricultural supply or wholesale of water
+
+Abstracts were also rejected when they only mention the customer's tap, without any further mention of the impact to customers themselves. This process resulted in src_R{sum(searches$Screening == "Selected")} abstracts for further analysis, some of which contain multiple keywords.
+
+#+BEGIN_SRC R :colnames yes :results output
+searches %>% 
+    group_by(Screening) %>%
+    count() %>%
+    arrange(n)
+#+END_SRC
+
+
+#+BEGIN_SRC R :results output graphics :file Visualisations/Search_Results.pdf :exports results
+  searches %>%
+      filter(Screening == "Selected") %>%
+      group_by(Keyword, Year) %>%
+      count() %>%
+      ggplot(aes(Year, n, fill = Keyword)) + 
+            geom_col() + 
+            scale_fill_grey() + 
+            theme_bw()
+#+END_SRC
+
+#+RESULTS:
+[[file:Visualisations/Search_Results.pdf]]
+
+
+
+```{r, results='asis', echo=FALSE}
+tabel <- tapply(keys$Journal, list(keys$Journal, keys$name), length)
+tabel <- as.data.frame(tabel)
+tabel$Journal <- row.names(tabel)
+refs <- as.data.frame(table(abstracts$Journal))
+names(refs) <- c("Journal", "Abstracts")
+stats <- merge(merge(journals, refs, all.x=T)[,-2], tabel, all.x=T)
+stats[is.na(stats)] <- 0
+names(stats) <- c("Journal", "Abstracts", "Consumer", "Customer", "Marketing")
+stats <- stats[order(stats$Abstracts, decreasing = T),]
+stats$Keywords <- rowSums(stats[,3:5])
+stats$Journal <- as.character(stats$Journal)
+stats <- rbind(stats, c("TOTAL", colSums(stats[,-1])))
+kable(stats, row.names=F, caption="Abstracts and keywords per journal.")
+```
+
+* Analyse
+** Open coding
+
+```{r, echo=FALSE}
+codings <- getCodingTable()[,4:5]
+```
+k
+`r length(unique(codings$code))` codes were assigned to the abstracts, with an average of `r round(nrow(codings)/nrow(abstracts), 1)` codes per abstract (total number of codes: `r nrow(codings)`).
+
+```{r, echo=FALSE, dpi=300, fig.cap="Code frequencies."}
+names(codings) <- c("code", "citation")
+ggplot(codings, aes(x=reorder(factor(code),factor(code),function(x) length(x)*-1))) +
+  geom_bar() + coord_flip() + xlab("Open Coding") + ylab("Frequency")
+```
+
+```{r, xtable, results='asis', echo=FALSE}
+code_memos <- RQDAQuery("SELECT name AS code, memo FROM freecode WHERE status==1")
+Frequency <- tapply(codings$code, codings$code, length)
+Frequency <- data.frame(code=row.names(Frequency), Frequency=Frequency)
+code_memos <- merge(code_memos, Frequency)
+code_memos <- code_memos[order(code_memos$Frequency, decreasing=T),]
+library(xtable)
+print(xtable(code_memos, caption="Code memos.", row.names=F, align="lllp{12cm}"), type="latex")
+```
+
+##Theoretical coding
+Theoretical coding was undertaken by converting the code structure to an adjacency matrix, which can be analysed using network modeling techniques.
+
+```{r, echo=FALSE, dpi=300, fig.width=8, fig.height=6, fig.cap="IWA Journal theme network."}
+library(igraph) #Networks
+CodingTable <- getCodingTable()[,c(5,4)] #Create table of codes per file
+CodingTable$freq <- 1 #Add counter default
+library(reshape) #Pivot tables
+termDocMatrix <- as.matrix(cast(CodingTable, codename~filename, value="freq", sum)) #Create term document matrix
+termDocMatrix[termDocMatrix>=1] <- 1 # change it to a Boolean matrix
+adjMatrix <- termDocMatrix %*% t(termDocMatrix) # transform into adjacency matrix
+g <- graph.adjacency(adjMatrix, weighted=T, mode="undirected") #build a graph from the above matrix
+V(g)$name <- gsub(" ", "\n", V(g)$name) #Stacked node labels
+g <- simplify(g) # remove loops and multiple links
+par(mar=rep(0,4))
+plot(g,
+     layout=layout.fruchterman.reingold,
+     vertex.label.cex=.8,
+     vertex.size=degree(g),
+     vertex.label.color="black",
+     vertex.frame.color="white",
+     vertex.color="gray",
+     edge.width=E(g)$weight*1,
+     edge.color="darkgray",
+)
+```
+
+Each vertex represents a code identified in the open coding stage. The edges represent relationships between codes by them being used within the same abstract. The size of the vertices is proportional to the degree of the node. The thickness of the edges is proportional to its weight.
+
+###Centrality
+```{r, results='asis', echo=FALSE}
+V(g)$name <- gsub("\n", " ", V(g)$name) #Stacked node labels
+centrality <- data.frame(Topic=V(g)$name, Degree=degree(g))
+kable(centrality[order(centrality$Degree, decreasing=T),], row.names=F)
+```
+
+##Selective coding
+Selective coding was undertaken using the community detection algorithms. The Walktrap and Spinglass methods are preferred. Five versions of each method are used to determine the one with the best fit for this network.
+
+```{r, echo=FALSE}
+iters <- 10
+start <- 5
+methods <- data.frame(Iterations=start:iters, spinglass=start:iters, walktrap=start:iters)
+for (i in start:iters) {
+  c1 <- spinglass.community(g, spins=i)
+  methods$spinglass[i-start+1] <- modularity(g, c1$membership, E(g)$weight)
+  c2 <- walktrap.community(g, steps=i)
+  methods$walktrap[i-start+1] <- modularity(g, c2$membership)
+}
+kable(methods, digits=4, caption="Comparison of community detection methods by modularity.")
+best <- which.max(c(max(methods$spinglass), max(methods$walktrap)))+1
+```
+
+The `r names(methods)[best]` method has the overall highest weighted modularity (`r max(methods[, best])`) with `r start-1+which.max(methods[, best])` `r ifelse(best==2, "spins", "random walks")`.
+
+```{r, echo=FALSE}
+maxspin <- start--1+which.max(methods[, best])
+set.seed(666)
+comms <- spinglass.community(g, spins=maxspin)
+discourse <- vector()
+for (i in 1:max(comms$membership)) {
+  discourse[i] <- paste(comms$names[comms$membership==i], collapse=", ")
+}
+discourse <- data.frame(community=1:length(discourse), topics=discourse)
+kable(discourse)
+```
+
+```{r, echo=FALSE, dpi=300, fig.width=8, fig.height=6, fig.cap="Communities of discourse in IWA journals.", results='asis'}
+V(g)$name <- gsub(" ", "\n", V(g)$name) #Stacked node labels
+par(mar=rep(0,4))
+plot(comms, g,
+     layout=layout.fruchterman.reingold,
+     vertex.label.cex=.8,
+     vertex.label.color="black",
+     vertex.frame.color=NA,
+     edge.color="darkgray",
+     mark.border=NA
+)
+```
+
+The weighted modularity of this community solution is `r modularity(g, comms$membership, E(g)$weight)`.

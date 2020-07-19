@@ -1,0 +1,69 @@
+---
+title: "Three Cornerstone Words"
+author: "Peter Prevos"
+date: "December 2016"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+# Load data
+values <- readLines("personalbranding.csv")
+students <- length(values)
+```
+
+The *Introduction to Personal Branding* by Kimberley Barker of the University of Virginia, distributed by Coursera. Students were assigned to identify 'Three Cornerstone Words' to identify their brand. This report analyses the values submitted by students of this course.
+
+```{r}
+# Remove punctuation, strip individual words and convert to lower case
+values <- gsub("[[:punct:]]", "", values)
+values <- gsub("and ", "", values)
+values <- gsub("  ", " ", values)
+values <- strsplit(values, " ")
+values <- unlist(values)
+values <- tolower(values)
+values <- values[order(values)]
+
+# Convert words to abstract nouns
+values <- gsub("altruism",  "altruistic", values)
+values <- gsub("authenticity",  "authentic", values)
+values <- gsub("committed",  "commitment", values)
+values <- gsub("compassionate",  "compassion", values)
+values <- gsub("creative", "creativity",values)
+values <- gsub("dedicated", "dedication", values)
+values <- gsub("efficient", "efficiency", values)
+values <- gsub("empathetic",  "empathy", values)
+values <- gsub("flexible",  "flexibility", values)
+values <- gsub("hardwork$",  "hardworking", values)
+values <- gsub("helping",  "helpful", values)
+values <- gsub("honest$",  "honesty", values)
+values <- gsub("innovation",  "innovative", values)
+values <- gsub("inspire$",  "inspiring", values)
+values <- gsub("learn$",  "learning", values)
+values <- gsub("loyal$",  "loyalty", values)
+values <- gsub("openmindedness",  "openminded", values)
+values <- gsub("professionalism",  "professional", values)
+values <- gsub("profession$",  "professional", values)
+values <- gsub("reliable",  "reliability", values)
+values <- gsub("share",  "sharing", values)
+values <- gsub("trustfull",  "trustworthy", values)
+```
+
+A total of `r students` students submitted their personal brand, who used `r length(values)` words to describe themselves. Of these words, `r length(unique(values))` words were unique (`r round(100*(length(unique(values))/length(values)))`%).
+
+The word cloud visualises the occurrence of all words that appear more than twice. The words honesty, creativity and integrity are the most popular values.
+
+The high occurrence of duplication in the chosen value statements indicates a lack of uniqueness in the personal branding. The tendency to use generic personal value statements (buzzwords) in personal branding has also become apparent on [LinkedIn profiles](https://blog.linkedin.com/2015/01/21/brand-you-year-how-to-brand-yourself-without-sounding-like-everyone-else). 
+
+```{r, dpi=300, fig.align='center'}
+library(wordcloud)
+set.seed(1969)
+wordcloud(values, min.freq=2, col=brewer.pal(8,"Dark2"))
+```
+
+

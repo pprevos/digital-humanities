@@ -1,0 +1,21 @@
+#+TITLE: _Joural article title_
+#+AUTHOR: Peter Prevos
+
+This repository contains the data and code to analyse a corpus of journal abstracts using a grounded theory-inspired approach and network analysis. The analysis is undertaken in the R language for statistical computing using the following packages:
+- RQDA: Qualitative data analyses.
+- igraph: Network analysis
+- Tidyverse: Generic data analysis and visualisation
+
+* Folders an Files
+This repository contains the following files:
+- =Analysis.org=: Literate programming file in org Mode and R code.
+- =Analysis.r=: Code extracted from =Analysis.org=.
+- =IWA_Abstracts.rqda=: Database with coded abstracts.
+- =IWA_Searches.csv=: Results of the article search.
+- =Readme.org=: This file
+- =Visualisations=: Folder with generated diagrams.
+
+* Publications
+- Prevos, P., Sullivan Mort, G. and DaSouza, C., TBA. In press.
+- Prevos, P. (2017). /Customer Experience Management for Water Utilities: Marketing urban water supply/. London: International Water Association.
+- Prevos, P. (2016). /The Invisible Water Utility. Employee Behaviour and Customer Experience in Service-Dominant Logic/ (PhD thesis). La Trobe University, Melbourne, Australia. Retrieved from [[https://hdl.handle.net/1959.9/561679][hdl.handle.net/1959.9/561679]].
