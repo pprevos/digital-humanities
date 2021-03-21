@@ -7,7 +7,7 @@
 #+LATEX_HEADER: \journal{horizonofreason.com}
 #+LATEX_HEADER: \ccoppy{\ccLogo \enspace Creative Commons Attribution-ShareAlike 3.0}
 #+LATEX_HEADER: \affiliation{Monash University}
-#+LATEX_HEADER: \note{20 February 2005}
+1#+LATEX_HEADER: \note{20 February 2005}
 #+LATEX_HEADER: \abstract{Abstract: This study measures the current and ideal body shape of the subject and the body shape of the most attractive other sex. The results confirm previous research which found that body dissatisfaction for females is significantly higher than for men. The research also found a mild positive correlation between age and ideal body shape for women and between age and the female body shape found most attractive by men.}
 #+LATEX_HEADER: \keywords{psychology, body image, physical attraction}
 #+LATEX_HEADER: \rightheader{Third Hemisphere Publishing}
